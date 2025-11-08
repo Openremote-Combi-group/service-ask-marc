@@ -1,14 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from config import config
 
 
-def init_cors(app: FastAPI, allowed_domains: list[str] = None):
-    if allowed_domains is None:
-        allowed_domains = []
-
-
+def init_cors(app: FastAPI):
     origins = [
-        *allowed_domains
+        *config.cors_allowed_domains,
     ]
 
     app.add_middleware(
