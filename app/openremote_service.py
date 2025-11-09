@@ -18,7 +18,6 @@ class OpenRemoteService:
         self.__openremote_client = openremote_client
         self.instance_id = instance_id
 
-
     async def send_heartbeat(self):
         await self.__openremote_client.services.heartbeat(self.service_id, self.instance_id)
 

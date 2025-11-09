@@ -8,12 +8,12 @@ class Config(BaseSettings):
     database_url: PostgresDsn | MySQLDsn | MariaDBDsn
     database_prefix: str | None = 'ask_marc_'
 
-    openremote_url: HttpUrl = HttpUrl('http://localhost:8080')
+    openremote_url: HttpUrl
     openremote_client_id: str
     openremote_client_secret: str
     openremote_verify_ssl: bool = True
     openremote_service_id: str = 'Ask-Marc'
-    openremote_heartbeat_interval: int = 50
+    openremote_heartbeat_interval: int = 45
 
     base_url: str = '/'
 
