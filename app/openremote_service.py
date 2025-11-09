@@ -46,7 +46,7 @@ async def init_openremote_service(app: FastAPI):
                 serviceId=config.openremote_service_id,
                 label="Ask Marc service",
                 icon='mdi-creation',
-                homepageUrl="http://localhost:8000",
+                homepageUrl="http://localhost:3000",
                 status="AVAILABLE"
             )
         )
