@@ -15,6 +15,9 @@ class Config(BaseSettings):
     openremote_service_id: str = 'Ask-Marc'
     openremote_heartbeat_interval: int = 45
 
+
+    openai_api_key: str | None = None
+
     base_url: str = '/'
 
     cors_allowed_domains: set[str] = set()

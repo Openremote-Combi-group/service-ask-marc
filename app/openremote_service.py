@@ -44,7 +44,7 @@ async def init_openremote_service(app: FastAPI):
         service_registry = await openremote_client.services.register_service(
             ExternalServiceSchema(
                 serviceId=config.openremote_service_id,
-                label="Ask Marc service",
+                label="Ask Marc MCP service",
                 icon='mdi-creation',
                 homepageUrl="http://localhost:3000",
                 status="AVAILABLE"

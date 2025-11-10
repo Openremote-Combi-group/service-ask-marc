@@ -1,9 +1,9 @@
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI
 
 from .cors import init_cors
+from .mcp_api import init_mcp
 from .openremote_service import init_openremote_service
 
 
@@ -20,6 +20,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+#app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 init_cors(app)
+init_mcp(app)
