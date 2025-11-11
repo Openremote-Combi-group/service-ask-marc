@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ChatView: typeof import('./components/ChatView.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     MessageBox: typeof import('./components/MessageBox.vue')['default']
     MessageView: typeof import('./components/MessageView.vue')['default']

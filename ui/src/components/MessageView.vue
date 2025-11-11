@@ -1,18 +1,12 @@
 <script setup lang="ts">
-  const messages = [
-    {
-      role: 'user',
-      message: 'Can you list all the assets in the Smart City?',
-    },
-    {
-      role: 'assistant',
-      message: 'Here are all the assets in the Smart City:',
-    },
-  ]
+  import { useActiveChatStore } from '@/stores/activeChat.ts'
+
+  const activeChatStore = useActiveChatStore()
+
 </script>
 
 <template>
-  <MessageBox v-for="(message, index) in messages" :key="index" :message="message.message" :role="message.role" />
+  <MessageBox v-for="(message, index) in activeChatStore.messages" :key="index" :message="message" />
 </template>
 
 <style scoped>

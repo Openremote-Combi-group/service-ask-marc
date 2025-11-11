@@ -17,7 +17,7 @@ def ask_marc() -> str:
 
 
 
-def init_mcp(app: FastAPI):
+def init_mcp_api(app: FastAPI):
     mcp_app = mcp.http_app(
         path="/", transport="streamable-http", stateless_http=True
     )
