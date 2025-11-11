@@ -1,7 +1,8 @@
 import random
 
-from fastapi import FastAPI
 from fastmcp import FastMCP
+
+from .services import init_services
 
 mcp = FastMCP("OpenRemote Tools")
 
@@ -15,11 +16,4 @@ def ask_marc() -> str:
     """
     return random.Random().choice(['Yes', 'No'])
 
-
-
-def init_mcp_api(app: FastAPI):
-    mcp_app = mcp.http_app(
-        path="/", transport="streamable-http", stateless_http=True
-    )
-    app.router.lifespan_context = mcp_app.router.lifespan_context
-    app.mount("/mcp", mcp_app, name="mcp")
+init_services(mcp)
