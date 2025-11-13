@@ -1,8 +1,14 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import PostgresDsn, MySQLDsn, MariaDBDsn, HttpUrl
 
 
 class Config(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file='.env',
+        env_file_encoding='utf-8',
+        case_sensitive=False
+    )
+
     app_debug: bool = False
 
     database_url: PostgresDsn | MySQLDsn | MariaDBDsn

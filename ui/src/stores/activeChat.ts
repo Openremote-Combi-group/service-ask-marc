@@ -7,19 +7,28 @@ export const useActiveChatStore = defineStore('activeChat', () => {
   let activeChat: WebSocket
   const connectionStatus = ref<'connected' | 'loading' | 'not_connected' | 'failed'>('not_connected')
   const streamingStatus = ref<'stand_by' | 'streaming' | null>(null)
+  const selectedModel = ref<string>('gpt-4o')
+  const errorMessage = ref<string>('')
 
   const isConnected = computed(() => connectionStatus.value === 'connected')
 
   const messages = reactive(new Map<string, Message>())
 
   async function startChat () {
+    // Close existing connection if any
+    if (activeChat && (activeChat.readyState === WebSocket.OPEN || activeChat.readyState === WebSocket.CONNECTING)) {
+      activeChat.close()
+    }
+    
     activeChat = new WebSocket('ws://localhost:8000/chat')
     connectionStatus.value = 'loading'
     streamingStatus.value = null
+    errorMessage.value = ''
 
     activeChat.addEventListener('error', () => {
       connectionStatus.value = 'failed'
       streamingStatus.value = null
+      errorMessage.value = 'Failed to connect to the server.'
 
       const id = v4()
 
@@ -32,7 +41,11 @@ export const useActiveChatStore = defineStore('activeChat', () => {
     })
 
     activeChat.addEventListener('open', () => {
-      connectionStatus.value = 'connected'
+      // Send initialization message with selected model
+      activeChat.send(JSON.stringify({
+        type: 'init',
+        model: selectedModel.value
+      }))
 
       const id = v4()
 
@@ -64,6 +77,27 @@ export const useActiveChatStore = defineStore('activeChat', () => {
       streamingStatus.value = streamResponse.type === 'ready' ? 'stand_by' : 'streaming'
 
       switch (streamResponse.type) {
+        case 'ready': {
+          connectionStatus.value = 'connected'
+          errorMessage.value = ''
+          break
+        }
+
+        case 'error': {
+          connectionStatus.value = 'failed'
+          streamingStatus.value = null
+          errorMessage.value = streamResponse.content
+          
+          const id = v4()
+          messages.set(id, {
+            id,
+            type: 'system',
+            level: 'error',
+            content: streamResponse.content,
+          })
+          break
+        }
+
         case 'human': {
           messages.set(streamResponse.id, {
             id: streamResponse.id,
@@ -153,12 +187,19 @@ export const useActiveChatStore = defineStore('activeChat', () => {
     return [...messages.values()]
   })
 
+  function setModel (model: string) {
+    selectedModel.value = model
+  }
+
   return {
     messages: getMessages,
     connectionStatus,
     isConnected,
     streamingStatus,
+    errorMessage,
+    selectedModel,
     startChat,
     sendPrompt,
+    setModel,
   }
 })
