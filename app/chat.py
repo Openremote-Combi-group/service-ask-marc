@@ -18,28 +18,6 @@ client = MultiServerMCPClient(
 )
 
 
-async def run_langchain_agent():
-    """Main logic: Connect to MCP + Run LangChain agent loop."""
-    tools = await client.get_tools()
-
-    agent = create_agent(
-        "openai:gpt-4.1",
-        tools
-    )
-
-    response = await agent.ainvoke(
-        {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": "Can you Ask Marc if life has any meaning?"
-                }
-            ]
-        }
-    )
-
-    print(response)
-
 router = APIRouter()
 
 
@@ -62,7 +40,7 @@ async def chat(websocket: WebSocket):
     messages: list[BaseMessage] = [
         SystemMessage(
             id=str(uuid4()),
-            content="You are an helpful assistant for the OpenRemote Platform."
+            content="You are an helpful assistant for the OpenRemote Platform. Markdown is supported so please render in Markdown."
         )
     ]
 

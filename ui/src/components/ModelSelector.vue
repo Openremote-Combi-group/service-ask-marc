@@ -37,7 +37,7 @@
     },
   ])
 
-  function selectModel(model: number) {
+  function selectModel (model: number) {
     currentModel.value = model
   }
 </script>
@@ -46,7 +46,7 @@
   <v-menu>
     <template #activator="{ props }">
       <v-chip v-bind="props" color="grey-darken-2">
-        {{ models[currentModel]?.name || 'Model' }}
+        Model: {{ models[currentModel]?.name || '' }}
       </v-chip>
     </template>
     <v-list>

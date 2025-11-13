@@ -1,19 +1,37 @@
 export type ToolCall = {
   name: string
-  args?: Record<string, any>
+  input?: Record<string, any>
   output?: any
   id: string
 }
 
-export type Message = {
+export type Message = AIMessage | HumanMessage | SystemMessage
+
+export type AIMessage = {
   id: string
-  type: 'human' | 'system' | 'ai'
-  name: string | null
+  type: 'ai'
   content: string
   tool_calls: Record<string, ToolCall>
 }
 
-export type StreamResponse = StreamResponseHumanMessage | StreamResponseToken | StreamResponseToolStart | StreamResponseToolEnd
+export type HumanMessage = {
+  id: string
+  type: 'human'
+  content: string
+}
+
+export type SystemMessage = {
+  id: string
+  type: 'system'
+  level: 'info' | 'error'
+  content: string
+}
+
+export type StreamResponse = StreamResponseReady | StreamResponseHumanMessage | StreamResponseToken | StreamResponseToolStart | StreamResponseToolEnd
+
+export type StreamResponseReady = {
+  type: 'ready'
+}
 
 export type StreamResponseHumanMessage = {
   type: 'human'

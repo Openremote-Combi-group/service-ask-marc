@@ -11,11 +11,15 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AIMessage: typeof import('./components/MessageView/AIMessage.vue')['default']
     ChatView: typeof import('./components/ChatView.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
+    HumanMessage: typeof import('./components/MessageView/HumanMessage.vue')['default']
     MessageBox: typeof import('./components/MessageBox.vue')['default']
-    MessageView: typeof import('./components/MessageView.vue')['default']
+    Messages: typeof import('./components/Messages/index.vue')['default']
+    MessageView: typeof import('./components/MessageView/index.vue')['default']
     ModelSelector: typeof import('./components/ModelSelector.vue')['default']
     PromptBox: typeof import('./components/PromptBox.vue')['default']
+    SystemMessage: typeof import('./components/MessageView/SystemMessage.vue')['default']
   }
 }
