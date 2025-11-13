@@ -136,6 +136,11 @@ export const useActiveChatStore = defineStore('activeChat', () => {
           messages.set(streamResponse.id, newMessage)
           break
         }
+
+        case 'done': {
+          streamingStatus.value = 'stand_by'
+          break
+        }
       }
     })
   }

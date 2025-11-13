@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from openremote_client import OpenRemoteClient
 from openremote_client.schemas import ExternalServiceSchema
 
-from config import config
 from services import OpenRemoteService
+from .config import config
 
 __openremote_service: OpenRemoteService | None = None
 

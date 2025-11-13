@@ -109,6 +109,12 @@ async def chat(websocket: WebSocket):
             )
             messages.append(ai_message)
 
+            await websocket.send_json({
+                "id": message_id,
+                "type": "done",
+                "content": ai_message.content
+            })
+
 
 
 

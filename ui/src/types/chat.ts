@@ -27,7 +27,7 @@ export type SystemMessage = {
   content: string
 }
 
-export type StreamResponse = StreamResponseReady | StreamResponseHumanMessage | StreamResponseToken | StreamResponseToolStart | StreamResponseToolEnd
+export type StreamResponse = StreamResponseReady | StreamResponseHumanMessage | StreamResponseToken | StreamResponseToolStart | StreamResponseToolEnd | StreamResponseDone
 
 export type StreamResponseReady = {
   type: 'ready'
@@ -59,4 +59,10 @@ export type StreamResponseToolEnd = {
   type: 'tool_end'
   name: string
   output: any
+}
+
+export type StreamResponseDone = {
+  id: string
+  type: 'done'
+  content: string
 }
