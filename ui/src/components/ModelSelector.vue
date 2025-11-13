@@ -1,44 +1,59 @@
 <script setup lang="ts">
   import { ref } from 'vue'
+  import { useActiveChatStore } from '@/stores/activeChat.ts'
+
+  const activeChatStore = useActiveChatStore()
 
   const currentModel = ref(0)
   const models = ref([
     {
       provider: 'OpenAI',
-      name: 'GPT-5',
+      name: 'GPT-4o',
+      id: 'gpt-4o',
     },
     {
       provider: 'OpenAI',
-      name: 'GPT-5 mini',
+      name: 'GPT-4o Mini',
+      id: 'gpt-4o-mini',
     },
     {
       provider: 'OpenAI',
-      name: 'GPT-5 nano',
+      name: 'GPT-4 Turbo',
+      id: 'gpt-4-turbo',
     },
     {
       provider: 'OpenAI',
-      name: 'GPT-5 pro',
+      name: 'GPT-4',
+      id: 'gpt-4',
     },
     {
       provider: 'OpenAI',
-      name: 'GPT-4.1',
+      name: 'GPT-3.5 Turbo',
+      id: 'gpt-3.5-turbo',
     },
     {
       provider: 'Claude',
-      name: 'Sonnet 4.5',
+      name: 'Claude 3.5 Sonnet',
+      id: 'claude-3-5-sonnet-20241022',
     },
     {
       provider: 'Claude',
-      name: 'Haiku 4.5',
+      name: 'Claude 3.5 Haiku',
+      id: 'claude-3-5-haiku-20241022',
     },
     {
       provider: 'Claude',
-      name: 'Opus 4.1',
+      name: 'Claude 3 Opus',
+      id: 'claude-3-opus-20240229',
     },
   ])
 
-  function selectModel (model: number) {
-    currentModel.value = model
+  async function selectModel (index: number) {
+    currentModel.value = index
+    activeChatStore.setModel(models.value[index].id)
+    
+    // Restart chat with new model
+    await activeChatStore.startChat()
   }
 </script>
 

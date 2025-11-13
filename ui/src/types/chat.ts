@@ -27,10 +27,15 @@ export type SystemMessage = {
   content: string
 }
 
-export type StreamResponse = StreamResponseReady | StreamResponseHumanMessage | StreamResponseToken | StreamResponseToolStart | StreamResponseToolEnd | StreamResponseDone
+export type StreamResponse = StreamResponseReady | StreamResponseError | StreamResponseHumanMessage | StreamResponseToken | StreamResponseToolStart | StreamResponseToolEnd | StreamResponseDone
 
 export type StreamResponseReady = {
   type: 'ready'
+}
+
+export type StreamResponseError = {
+  type: 'error'
+  content: string
 }
 
 export type StreamResponseHumanMessage = {
