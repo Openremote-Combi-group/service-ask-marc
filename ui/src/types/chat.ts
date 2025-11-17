@@ -5,7 +5,7 @@ export type ToolCall = {
   id: string
 }
 
-export type Message = AIMessage | HumanMessage | SystemMessage
+export type Message = AIMessage | HumanMessage
 
 export type AIMessage = {
   id: string
@@ -17,13 +17,6 @@ export type AIMessage = {
 export type HumanMessage = {
   id: string
   type: 'human'
-  content: string
-}
-
-export type SystemMessage = {
-  id: string
-  type: 'system'
-  level: 'info' | 'error'
   content: string
 }
 

@@ -15,7 +15,7 @@
           <div class="prompt">
             <PromptBox />
             <div class="d-flex">
-              <ModelSelector />
+              <!--              <ModelSelector />-->
             </div>
           </div>
         </div>
@@ -27,6 +27,6 @@
 <style scoped>
 .prompt {
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
 }
 </style>

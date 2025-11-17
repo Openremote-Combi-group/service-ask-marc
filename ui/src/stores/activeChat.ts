@@ -1,6 +1,5 @@
 import type { AIMessage, Message, StreamResponse } from '@/types/chat'
 import { defineStore } from 'pinia'
-import { v4 } from 'uuid'
 import { computed, reactive, ref } from 'vue'
 
 export const useActiveChatStore = defineStore('activeChat', () => {
@@ -8,7 +7,7 @@ export const useActiveChatStore = defineStore('activeChat', () => {
   const connectionStatus = ref<'connected' | 'loading' | 'not_connected' | 'failed'>('not_connected')
   const streamingStatus = ref<'stand_by' | 'streaming' | null>(null)
   const selectedModel = ref<string>('gpt-4o')
-  const errorMessage = ref<string>('')
+  const errorMessage = ref<string | null>(null)
 
   const isConnected = computed(() => connectionStatus.value === 'connected')
 
@@ -19,56 +18,33 @@ export const useActiveChatStore = defineStore('activeChat', () => {
     if (activeChat && (activeChat.readyState === WebSocket.OPEN || activeChat.readyState === WebSocket.CONNECTING)) {
       activeChat.close()
     }
-    
-    activeChat = new WebSocket('ws://localhost:8000/chat')
+
+    activeChat = new WebSocket('ws://localhost:8421/chat')
     connectionStatus.value = 'loading'
     streamingStatus.value = null
-    errorMessage.value = ''
+    errorMessage.value = null
 
     activeChat.addEventListener('error', () => {
       connectionStatus.value = 'failed'
       streamingStatus.value = null
       errorMessage.value = 'Failed to connect to the server.'
-
-      const id = v4()
-
-      messages.set(id, {
-        id,
-        type: 'system',
-        level: 'error',
-        content: 'Failed to connect.',
-      })
     })
 
     activeChat.addEventListener('open', () => {
-      // Send initialization message with selected model
+      // Send an initialization message with a selected model
+      connectionStatus.value = 'connected'
       activeChat.send(JSON.stringify({
         type: 'init',
-        model: selectedModel.value
+        model: selectedModel.value,
       }))
 
-      const id = v4()
-
-      messages.set(id, {
-        id,
-        type: 'system',
-        level: 'info',
-        content: 'Chat connected',
-      })
+      errorMessage.value = ''
     })
 
     activeChat.addEventListener('close', () => {
       connectionStatus.value = 'not_connected'
       streamingStatus.value = null
-
-      const id = v4()
-
-      messages.set(id, {
-        id,
-        type: 'system',
-        level: 'info',
-        content: 'Chat disconnected.',
-      })
+      errorMessage.value = 'Connection closed.'
     })
 
     activeChat.addEventListener('message', (event: MessageEvent) => {
@@ -78,8 +54,7 @@ export const useActiveChatStore = defineStore('activeChat', () => {
 
       switch (streamResponse.type) {
         case 'ready': {
-          connectionStatus.value = 'connected'
-          errorMessage.value = ''
+          errorMessage.value = null
           break
         }
 
@@ -87,14 +62,6 @@ export const useActiveChatStore = defineStore('activeChat', () => {
           connectionStatus.value = 'failed'
           streamingStatus.value = null
           errorMessage.value = streamResponse.content
-          
-          const id = v4()
-          messages.set(id, {
-            id,
-            type: 'system',
-            level: 'error',
-            content: streamResponse.content,
-          })
           break
         }
 
@@ -172,7 +139,6 @@ export const useActiveChatStore = defineStore('activeChat', () => {
         }
 
         case 'done': {
-          streamingStatus.value = 'stand_by'
           break
         }
       }

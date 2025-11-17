@@ -56,3 +56,31 @@ class OpenRemoteService:
     async def deregister(self):
         await self.client.services.deregister_service(self.service_id, self.instance_id)
         logger.info("Deregistered OpenRemote service")
+
+
+__openremote_service: OpenRemoteService | None = None
+
+
+def get_openremote_service() -> OpenRemoteService:
+    global __openremote_service
+
+    if __openremote_service is None:
+        raise RuntimeError("OpenRemote service not initialized")
+
+    return __openremote_service
+
+
+async def init_openremote_service(service_schema: ExternalServiceSchema, host: str, client_id: str, client_secret: str, verify_SSL: bool = True):
+    global __openremote_service
+
+    openremote_client = OpenRemoteClient(
+        host=host,
+        client_id=client_id,
+        client_secret=client_secret,
+        verify_SSL=verify_SSL
+    )
+
+    __openremote_service = await OpenRemoteService.register(
+        openremote_client,
+        service_schema
+    )
