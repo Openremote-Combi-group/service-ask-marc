@@ -17,11 +17,11 @@
   <div class="d-flex flex-column ga-2">
     <v-alert
       v-if="activeChatStore.errorMessage"
-      type="error"
-      density="compact"
-      variant="tonal"
-      closable
       class="mb-2"
+      closable
+      density="compact"
+      type="error"
+      variant="tonal"
     >
       {{ activeChatStore.errorMessage }}
     </v-alert>

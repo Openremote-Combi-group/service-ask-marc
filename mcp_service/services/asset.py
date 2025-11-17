@@ -1,22 +1,34 @@
 from fastmcp import FastMCP
+from httpx import HTTPStatusError
 from openremote_client.schemas import AssetQuerySchema, RealmPredicateSchema, AssetObjectSchema, AttributeStateSchema
 from pydantic import Field
 
-from app.openremote_service import get_openremote_service
+from services.openremote import get_openremote_service
 
 asset_mcp = FastMCP("Asset Service")
 
 
 class AssetQuerySchemaDescription(AssetQuerySchema):
     types: list[str] | None = Field(default=None, description="Asset types to query, (Make sure to use the 'get_all_asset_types' tool to gather which types there are)")
-    realm: RealmPredicateSchema | None = Field(default=None, description="Realm to query (Use the 'get_all_realms' tool to now which realms to query)")
+    realm: RealmPredicateSchema | None = Field(default=None, description="Realm to query (Make sure to use the 'get_all_realms' tool to now which realms to query)")
 
 @asset_mcp.tool
 async def asset_query(asset_query_schema: AssetQuerySchemaDescription):
-    """Lists all assets available."""
+    """
+    Lists all assets available.
+
+    If 403 is returned, that either means you don't have to correct access rights or the realms you specified do not exist.
+    Try calling the 'get_all_realms' tool to see which realms are available.
+    """
     openremote_service = get_openremote_service()
 
-    return await openremote_service.client.asset.query_assets(asset_query_schema)
+    try:
+        return await openremote_service.client.asset.query_assets(asset_query_schema)
+    except HTTPStatusError as e:
+        return {
+            "status_code": e.response.status_code,
+            "detail": e.response.text,
+        }
 
 
 @asset_mcp.tool
@@ -53,7 +65,7 @@ async def delete_asset(asset_id: str):
 
 
 @asset_mcp.tool
-async def write_attribute_value(asset_id: str, attribute_name: str, value: any):
+async def write_attribute_value(asset_id: str, attribute_name: str, value: str | int | float | bool):
     """Write/update a single attribute value on an asset. Use this to change sensor values, settings, etc."""
     openremote_service = get_openremote_service()
 

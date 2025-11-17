@@ -50,8 +50,8 @@
 
   async function selectModel (index: number) {
     currentModel.value = index
-    activeChatStore.setModel(models.value[index].id)
-    
+    // activeChatStore.setModel(models.value[index].id)
+
     // Restart chat with new model
     await activeChatStore.startChat()
   }
@@ -61,7 +61,7 @@
   <v-menu>
     <template #activator="{ props }">
       <v-chip v-bind="props" color="grey-darken-2">
-        Model: {{ models[currentModel]?.name || '' }}
+        Model: {{ '' }}
       </v-chip>
     </template>
     <v-list>

@@ -1,25 +1,14 @@
-import asyncio
-from uuid import uuid4
 import json
+from uuid import uuid4
 
 from fastapi import APIRouter, WebSocket, FastAPI
 from langchain.agents import create_agent
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage
 from langchain_core.messages import SystemMessage, HumanMessage, BaseMessage
-from langchain_mcp_adapters.client import MultiServerMCPClient
 
-from app.config import config
-
-client = MultiServerMCPClient(
-    {
-        "openremote": {
-            "transport": "streamable_http",
-            "url": "http://localhost:8000/mcp"
-        }
-    }
-)
-
+from services.mcp_client import get_mcp_client_service
+from .config import config
 
 router = APIRouter()
 
@@ -39,8 +28,10 @@ MODEL_MAPPING = {
 @router.websocket('/chat')
 async def chat(websocket: WebSocket):
     await websocket.accept()
+
+    mcp_service = get_mcp_client_service()
     
-    tools = await client.get_tools()
+    tools = await mcp_service.get_tools()
     
     messages: list[BaseMessage] = [
         SystemMessage(
@@ -51,8 +42,7 @@ async def chat(websocket: WebSocket):
     
     # Wait for initial message with model selection
     try:
-        initial_data = await websocket.receive_text()
-        initial_message = json.loads(initial_data)
+        initial_message = await websocket.receive_json()
         
         if initial_message.get('type') == 'init':
             selected_model = initial_message.get('model', 'gpt-4o')

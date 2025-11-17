@@ -1,0 +1,6 @@
+{
+  "openremote": {
+    "transport": "streamable_http",
+    "url": "http://localhost:8420/mcp"
+  }
+}

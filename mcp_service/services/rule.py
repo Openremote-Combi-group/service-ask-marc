@@ -1,7 +1,7 @@
 from fastmcp import FastMCP
 from openremote_client.schemas import GlobalRulesetSchema, RealmRulesetSchema, AssetRulesetSchema
 
-from app.openremote_service import get_openremote_service
+from services.openremote import get_openremote_service
 
 rule_mcp = FastMCP("Rule Service")
 
