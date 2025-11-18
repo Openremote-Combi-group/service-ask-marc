@@ -40,7 +40,7 @@ async def chat(websocket: WebSocket):
         )
     ]
     
-    # Wait for initial message with model selection
+    # Wait for an initial message with model selection
     try:
         initial_message = await websocket.receive_json()
         
