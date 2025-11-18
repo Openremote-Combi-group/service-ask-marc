@@ -7,7 +7,7 @@ from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage
 from langchain_core.messages import SystemMessage, HumanMessage, BaseMessage
 
-from services.mcp_client import get_mcp_client_service
+from shared.mcp_client import get_mcp_client_service
 from .config import config
 
 router = APIRouter()

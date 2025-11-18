@@ -3,7 +3,7 @@ from httpx import HTTPStatusError
 from openremote_client.schemas import AssetQuerySchema, RealmPredicateSchema, AssetObjectSchema, AttributeStateSchema
 from pydantic import Field
 
-from services.openremote import get_openremote_service
+from shared.openremote_service import get_openremote_service
 
 asset_mcp = FastMCP("Asset Service")
 

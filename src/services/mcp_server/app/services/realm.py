@@ -1,6 +1,6 @@
 from fastmcp import FastMCP
 
-from services.openremote import get_openremote_service
+from shared.openremote_service import get_openremote_service
 
 realm_mcp = FastMCP("Realm Service")
 
