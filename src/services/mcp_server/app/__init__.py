@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastmcp import FastMCP
 from openremote_client.schemas import ExternalServiceSchema
 
-from services.openremote import init_openremote_service
+from shared.openremote_service import init_openremote_service
 from .config import config
 from .health import init_health
 from .services import init_services
@@ -35,7 +35,7 @@ def extend_lifespan(original_lifespan):
                 verify_SSL=config.openremote_verify_ssl,
                 service_schema=ExternalServiceSchema(
                     serviceId=config.openremote_service_id,
-                    label="MCP Service",
+                    label="MCP Server",
                     homepageUrl="http://localhost:8420/health",
                     status="AVAILABLE",
                 )
