@@ -98,9 +98,6 @@ async def chat(websocket: WebSocket):
                 model,
                 tools
             )
-
-            # Send ready signal
-            await websocket.send_json({"type": "ready"})
         else:
             await websocket.send_json({
                 "type": "error",
@@ -128,6 +125,7 @@ async def chat(websocket: WebSocket):
         return
 
     while True:
+        await websocket.send_json({"type": "ready"})
         human_prompt = await websocket.receive_text()
 
         human_message = HumanMessage(
@@ -192,11 +190,11 @@ async def chat(websocket: WebSocket):
             )
             messages.append(ai_message)
 
-            await websocket.send_json({
-                "id": message_id,
-                "type": "done",
-                "content": ai_message.content
-            })
+        await websocket.send_json({
+            "id": message_id,
+            "type": "done",
+            "content": accumulated_content
+        })
 
 
 
