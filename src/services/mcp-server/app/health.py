@@ -8,7 +8,7 @@ from .config import config
 mcp_health = FastMCP("Health Check")
 
 
-@mcp_health.custom_route("/health", methods=['GET'])
+@mcp_health.custom_route("/api/health", methods=['GET'])
 async def health(request):
     openremote_service = get_openremote_service()
 

@@ -14,5 +14,8 @@ dependencies = [
     "shared",
 ]
 
+[tool.setuptools]
+packages = ["app"]
+
 [tool.uv.sources]
 shared = { workspace = true }

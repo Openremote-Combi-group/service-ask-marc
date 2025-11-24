@@ -21,4 +21,4 @@ async def health():
 
 
 def init_health(app: FastAPI):
-    app.include_router(health_router)
+    app.include_router(health_router, prefix='/api')

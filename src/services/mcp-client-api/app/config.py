@@ -6,10 +6,15 @@ class Config(BaseSettings):
     model_config = SettingsConfigDict(
         env_file='.env',
         env_file_encoding='utf-8',
-        case_sensitive=False
+        case_sensitive=False,
+        extra='allow',
     )
 
     app_debug: bool = False
+
+    app_static_folder: str = 'static'
+
+    app_homepage_url: str = '/'
 
     # database_url: PostgresDsn | MySQLDsn | MariaDBDsn
     # database_prefix: str | None = 'ask_marc_'

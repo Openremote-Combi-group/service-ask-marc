@@ -19,7 +19,7 @@ export const useActiveChatStore = defineStore('activeChat', () => {
       activeChat.close()
     }
 
-    activeChat = new WebSocket('ws://localhost:8421/chat')
+    activeChat = new WebSocket('ws://localhost:8421/api/chat')
     connectionStatus.value = 'loading'
     streamingStatus.value = null
     errorMessage.value = null

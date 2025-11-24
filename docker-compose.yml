@@ -37,6 +37,8 @@ services:
     restart: always
     image: openremote/postgresql:${POSTGRESQL_VERSION:-latest}
     shm_size: 128mb
+    ports:
+      - "5432:5432"
 
   keycloak:
     restart: always
@@ -114,6 +116,9 @@ services:
     volumes:
       - ./mcp_config.json:/app/mcp_config.json
     environment:
+      APP_HOMEPAGE_URL: http://localhost:8421/
+      APP_STATIC_FOLDER: /app/static
+
       OPENREMOTE_CLIENT_ID: ${MCP_OPENREMOTE_CLIENT_ID}
       OPENREMOTE_CLIENT_SECRET: ${MCP_OPENREMOTE_CLIENT_SECRET}
       OPENREMOTE_URL: https://proxy
