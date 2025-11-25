@@ -1,15 +1,15 @@
-from fastapi import FastAPI, APIRouter
+from fastmcp import FastMCP
 from httpx import HTTPStatusError
 from starlette.responses import JSONResponse
 
 from shared.openremote_service import get_openremote_service
 from .config import config
 
-health_router = APIRouter()
+mcp_health = FastMCP("Health Check")
 
 
-@health_router.get("/health")
-async def health():
+@mcp_health.custom_route("/api/health", methods=['GET'])
+async def health(request):
     openremote_service = get_openremote_service()
 
     try:
@@ -20,5 +20,5 @@ async def health():
     return JSONResponse({"status": "healthy", "service": config.openremote_service_id}, status_code=200)
 
 
-def init_health(app: FastAPI):
-    app.include_router(health_router)
+def init_health(mcp: FastMCP):
+    mcp.mount(mcp_health)

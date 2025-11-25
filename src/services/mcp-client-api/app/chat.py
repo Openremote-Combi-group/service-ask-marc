@@ -30,51 +30,54 @@ async def chat(websocket: WebSocket):
     await websocket.accept()
 
     mcp_service = get_mcp_client_service()
-    
+
     tools = await mcp_service.get_tools()
-    
+
     messages: list[BaseMessage] = [
         SystemMessage(
             id=str(uuid4()),
             content="You are an helpful assistant for the OpenRemote Platform. Markdown is supported so please render in Markdown."
         )
     ]
-    
-    # Wait for initial message with model selection
+
+    # Wait for an initial message with model selection
     try:
         initial_message = await websocket.receive_json()
-        
+
         if initial_message.get('type') == 'init':
             selected_model = initial_message.get('model', 'gpt-4o')
-            
+
             # Validate model exists
             if selected_model not in MODEL_MAPPING:
                 await websocket.send_json({
                     "type": "error",
                     "content": f"Invalid model selected: {selected_model}"
                 })
+                print("Client error (Invalid model selected)")
                 await websocket.close()
                 return
-            
+
             model_config = MODEL_MAPPING[selected_model]
-            
+
             # Check if API key is configured
             if model_config['model_provider'] == 'openai' and not config.openai_api_key:
                 await websocket.send_json({
                     "type": "error",
                     "content": "OpenAI API key is not configured. Please add OPENAI_API_KEY to your environment variables."
                 })
+                print("Client error (OpenAI API key not configured)")
                 await websocket.close()
                 return
-            
+
             if model_config['model_provider'] == 'anthropic' and not config.anthropic_api_key:
                 await websocket.send_json({
                     "type": "error",
                     "content": "Anthropic API key is not configured. Please add ANTHROPIC_API_KEY to your environment variables."
                 })
+                print("Client error (Anthropic API key not configured)")
                 await websocket.close()
                 return
-            
+
             # Initialize model with proper configuration
             try:
                 model = init_chat_model(
@@ -87,29 +90,29 @@ async def chat(websocket: WebSocket):
                     "type": "error",
                     "content": f"Failed to initialize AI model: {str(e)}"
                 })
+                print("Failed to initialize AI model: ", e)
                 await websocket.close()
                 return
-            
+
             agent = create_agent(
                 model,
                 tools
             )
-            
-            # Send ready signal
-            await websocket.send_json({"type": "ready"})
         else:
             await websocket.send_json({
                 "type": "error",
                 "content": "Expected initialization message"
             })
+            print("Web socket error (Invalid json): ")
             await websocket.close()
             return
-            
+
     except json.JSONDecodeError:
         await websocket.send_json({
             "type": "error",
             "content": "Invalid message format"
         })
+        print("Web socket error (Invalid json): ", e)
         await websocket.close()
         return
     except Exception as e:
@@ -118,9 +121,11 @@ async def chat(websocket: WebSocket):
             "content": f"Connection error: {str(e)}"
         })
         await websocket.close()
+        print("Web socket error: ", e)
         return
 
     while True:
+        await websocket.send_json({"type": "ready"})
         human_prompt = await websocket.receive_text()
 
         human_message = HumanMessage(
@@ -140,14 +145,14 @@ async def chat(websocket: WebSocket):
 
         message_id = str(uuid4())
         accumulated_content = ""
-        
+
         # Stream the agent response
         async for event in agent.astream_events(
             {"messages": messages},
             version="v2"
         ):
             kind = event["event"]
-            
+
             # Stream token chunks from the LLM
             if kind == "on_chat_model_stream":
                 chunk = event["data"]["chunk"]
@@ -158,7 +163,7 @@ async def chat(websocket: WebSocket):
                         "type": "token",
                         "content": chunk.content
                     })
-            
+
             # Stream tool calls and results
             elif kind == "on_tool_start":
                 await websocket.send_json({
@@ -168,7 +173,7 @@ async def chat(websocket: WebSocket):
                     "name": event["name"],
                     "input": event["data"].get("input")
                 })
-            
+
             elif kind == "on_tool_end":
                 await websocket.send_json({
                     "id": message_id,
@@ -177,7 +182,7 @@ async def chat(websocket: WebSocket):
                     "name": event["name"],
                     "output": event["data"].get("output").content
                 })
-            
+
             # Add the AI's response to the messages list
             ai_message = AIMessage(
                 id=message_id,
@@ -185,14 +190,14 @@ async def chat(websocket: WebSocket):
             )
             messages.append(ai_message)
 
-            await websocket.send_json({
-                "id": message_id,
-                "type": "done",
-                "content": ai_message.content
-            })
+        await websocket.send_json({
+            "id": message_id,
+            "type": "done",
+            "content": accumulated_content
+        })
 
 
 
 
 def init_chat_api(app: FastAPI):
-    app.include_router(router)
+    app.include_router(router, prefix='/api')

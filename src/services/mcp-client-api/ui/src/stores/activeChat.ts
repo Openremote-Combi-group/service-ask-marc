@@ -19,7 +19,7 @@ export const useActiveChatStore = defineStore('activeChat', () => {
       activeChat.close()
     }
 
-    activeChat = new WebSocket('ws://localhost:8421/chat')
+    activeChat = new WebSocket('ws://localhost:8421/api/chat')
     connectionStatus.value = 'loading'
     streamingStatus.value = null
     errorMessage.value = null
@@ -49,11 +49,10 @@ export const useActiveChatStore = defineStore('activeChat', () => {
 
     activeChat.addEventListener('message', (event: MessageEvent) => {
       const streamResponse = JSON.parse(event.data) as StreamResponse
-
-      streamingStatus.value = streamResponse.type === 'ready' ? 'stand_by' : 'streaming'
-
+      console.log(streamResponse)
       switch (streamResponse.type) {
         case 'ready': {
+          streamingStatus.value = 'stand_by'
           errorMessage.value = null
           break
         }
@@ -75,6 +74,7 @@ export const useActiveChatStore = defineStore('activeChat', () => {
         }
 
         case 'token': {
+          streamingStatus.value = 'streaming'
           let newMessage = messages.get(streamResponse.id)
 
           if (!newMessage) {
@@ -94,6 +94,7 @@ export const useActiveChatStore = defineStore('activeChat', () => {
         }
 
         case 'tool_start': {
+          streamingStatus.value = 'streaming'
           let newMessage = messages.get(streamResponse.id) as AIMessage
 
           if (!newMessage) {
@@ -116,6 +117,7 @@ export const useActiveChatStore = defineStore('activeChat', () => {
         }
 
         case 'tool_end': {
+          streamingStatus.value = 'streaming'
           let newMessage = messages.get(streamResponse.id) as AIMessage
 
           if (!newMessage) {
@@ -139,6 +141,7 @@ export const useActiveChatStore = defineStore('activeChat', () => {
         }
 
         case 'done': {
+          streamingStatus.value = 'stand_by'
           break
         }
       }
