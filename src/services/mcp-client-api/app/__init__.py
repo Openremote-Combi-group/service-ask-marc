@@ -12,6 +12,7 @@ from .chat import init_chat_api
 from .config import config
 from .cors import init_cors
 from .health import init_health
+from .model import init_model_api
 
 
 # FastAPI lifespan
@@ -59,8 +60,7 @@ app = FastAPI(
 init_cors(app)
 init_chat_api(app)
 init_health(app)
+init_model_api(app)
 
 
 app.mount("/", StaticFiles(directory=config.app_static_folder, html=True), name="static")
-
-print(app.routes)
