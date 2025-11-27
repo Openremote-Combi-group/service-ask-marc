@@ -11,7 +11,7 @@ async def main():
     async with client:
         # List available operations
         for tool in await client.list_tools():
-            if tool.name == 'create_asset':
+            if tool.name == 'asset_create_LightAsset':
                 print(json.dumps(tool.inputSchema, indent=4))
 
 asyncio.run(main())

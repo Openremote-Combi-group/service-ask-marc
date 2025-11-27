@@ -1,6 +1,10 @@
 from pydantic import HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+import logging
+
+
+logger = logging.getLogger("uvicorn")
 
 class Config(BaseSettings):
     model_config = SettingsConfigDict(
@@ -25,3 +29,6 @@ class Config(BaseSettings):
 
 
 config = Config()
+
+if config.app_debug:
+    logging.basicConfig(level=logging.DEBUG)

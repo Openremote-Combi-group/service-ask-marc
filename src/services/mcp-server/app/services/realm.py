@@ -6,7 +6,7 @@ realm_mcp = FastMCP("Realm Service")
 
 
 @realm_mcp.tool
-async def get_all_realms():
+async def get_all():
     """Retrieve all realms."""
     openremote_service = get_openremote_service()
 
@@ -14,7 +14,7 @@ async def get_all_realms():
 
 
 @realm_mcp.tool
-async def get_realm(realm_name: str):
+async def get_by_name(realm_name: str):
     """Retrieve details about the currently authenticated and active realm."""
     openremote_service = get_openremote_service()
 

@@ -6,7 +6,7 @@ asset_model_mcp = FastMCP("Asset Model Service")
 
 
 @asset_model_mcp.tool
-async def get_all_asset_types():
+async def get_all_types():
     """Retrieve the asset type information of each available asset type"""
     openremote_service = get_openremote_service()
 
@@ -14,7 +14,7 @@ async def get_all_asset_types():
 
 
 @asset_model_mcp.tool
-async def get_asset_type(asset_type: str):
+async def get_type(asset_type: str):
     """Retrieve the asset type information of an asset type"""
     openremote_service = get_openremote_service()
 

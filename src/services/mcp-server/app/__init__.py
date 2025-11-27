@@ -13,8 +13,6 @@ mcp = FastMCP("OpenRemote Tools")
 
 init_health(mcp)
 
-init_services(mcp)
-
 app = mcp.http_app()
 
 
@@ -36,10 +34,12 @@ def extend_lifespan(original_lifespan):
                 service_schema=ExternalServiceSchema(
                     serviceId=config.openremote_service_id,
                     label="MCP Server",
-                    homepageUrl="http://localhost:8420/health",
+                    homepageUrl="http://localhost:8420",
                     status="AVAILABLE",
                 )
             )
+
+            await init_services(mcp)
 
             yield
 

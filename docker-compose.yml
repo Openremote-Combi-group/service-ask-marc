@@ -18,7 +18,7 @@ services:
       manager:
         condition: service_healthy
     ports:
-      - "80:80" # Needed for SSL generation using letsencrypt
+      - "8080:80" # Needed for SSL generation using letsencrypt
       - "${OR_SSL_PORT:-443}:443"
       - "8883:8883"
       - "127.0.0.1:8404:8404" # Localhost metrics access
@@ -37,8 +37,8 @@ services:
     restart: always
     image: openremote/postgresql:${POSTGRESQL_VERSION:-latest}
     shm_size: 128mb
-    ports:
-      - "5432:5432"
+#    ports:
+#      - "5432:5432"
 
   keycloak:
     restart: always
@@ -85,44 +85,44 @@ services:
       OR_SETUP_IMPORT_DEMO_AGENT_KNX:
       OR_SETUP_IMPORT_DEMO_AGENT_VELBUS:
 
-  mcp-server:
-    build:
-        context: ./
-        dockerfile: src/services/mcp-server/Dockerfile
-    restart: always
-    depends_on:
-      manager:
-        condition: service_healthy
-    ports:
-      - "8420:8420"
-    environment:
-      OPENREMOTE_CLIENT_ID: ${MCP_OPENREMOTE_CLIENT_ID}
-      OPENREMOTE_CLIENT_SECRET: ${MCP_OPENREMOTE_CLIENT_SECRET}
-      OPENREMOTE_URL: https://proxy
-      OPENREMOTE_VERIFY_SSL: 0
-
-  mcp-client-api:
-    build:
-        context: ./
-        dockerfile: src/services/mcp-client-api/Dockerfile
-    restart: always
-    depends_on:
-      manager:
-        condition: service_healthy
-      mcp-server:
-        condition: service_started
-    ports:
-      - "8421:8421"
-    volumes:
-      - ./mcp_config.json:/app/mcp_config.json
-    environment:
-      APP_HOMEPAGE_URL: http://localhost:8421/
-      APP_STATIC_FOLDER: /app/static
-
-      OPENREMOTE_CLIENT_ID: ${MCP_OPENREMOTE_CLIENT_ID}
-      OPENREMOTE_CLIENT_SECRET: ${MCP_OPENREMOTE_CLIENT_SECRET}
-      OPENREMOTE_URL: https://proxy
-      OPENREMOTE_VERIFY_SSL: 0
-
-      # Fill one of the following keys or both!
-      OPENAI_API_KEY: ${MCP_OPENAI_API_KEY}
+#  mcp-server:
+#    build:
+#        context: ./
+#        dockerfile: src/services/mcp-server/Dockerfile
+#    restart: always
+#    depends_on:
+#      manager:
+#        condition: service_healthy
+#    ports:
+#      - "8420:8420"
+#    environment:
+#      OPENREMOTE_CLIENT_ID: ${MCP_OPENREMOTE_CLIENT_ID}
+#      OPENREMOTE_CLIENT_SECRET: ${MCP_OPENREMOTE_CLIENT_SECRET}
+#      OPENREMOTE_URL: https://proxy
+#      OPENREMOTE_VERIFY_SSL: 0
+#
+#  mcp-client-api:
+#    build:
+#        context: ./
+#        dockerfile: src/services/mcp-client-api/Dockerfile
+#    restart: always
+#    depends_on:
+#      manager:
+#        condition: service_healthy
+#      mcp-server:
+#        condition: service_started
+#    ports:
+#      - "8421:8421"
+#    volumes:
+#      - ./mcp_config.json:/app/mcp_config.json
+#    environment:
+#      APP_HOMEPAGE_URL: http://localhost:8421/
+#      APP_STATIC_FOLDER: /app/static
+#
+#      OPENREMOTE_CLIENT_ID: ${MCP_OPENREMOTE_CLIENT_ID}
+#      OPENREMOTE_CLIENT_SECRET: ${MCP_OPENREMOTE_CLIENT_SECRET}
+#      OPENREMOTE_URL: https://proxy
+#      OPENREMOTE_VERIFY_SSL: 0
+#
+#      # Fill one of the following keys or both!
+#      OPENAI_API_KEY: ${MCP_OPENAI_API_KEY}

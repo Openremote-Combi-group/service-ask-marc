@@ -1,0 +1,1 @@
+from .asset_attribute_model import asset_attribute_model_factory
