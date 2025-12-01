@@ -53,9 +53,17 @@ class TestChatWebSocket:
         monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         
         # Reload config without API key
-        from importlib import reload
-        import app.config as config_module
-        reload(config_module)
+        import sys
+        sys.path.insert(0, 'src/services/mcp-client-api')
+        
+        # Clear cached modules
+        for key in list(sys.modules.keys()):
+            if key.startswith('app'):
+                del sys.modules[key]
+        
+        # Import and create fresh config without API key
+        from app.config import Config
+        fresh_config = Config()
         
         mock_websocket = AsyncMock()
         mock_websocket.accept = AsyncMock()
@@ -67,10 +75,12 @@ class TestChatWebSocket:
         mock_websocket.close = AsyncMock()
         
         with patch('app.chat.get_mcp_client_service', return_value=mock_mcp_client):
-            with patch('app.chat.config', config_module.config):
+            with patch('app.chat.config', fresh_config):
                 from app.chat import chat
                 
                 await chat(mock_websocket)
+                
+                sys.path.pop(0)
                 
                 # Should send error about missing API key
                 error_call = mock_websocket.send_json.call_args[0][0]
@@ -84,9 +94,17 @@ class TestChatWebSocket:
         """Test chat rejects Anthropic model when API key is missing."""
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         
-        from importlib import reload
-        import app.config as config_module
-        reload(config_module)
+        import sys
+        sys.path.insert(0, 'src/services/mcp-client-api')
+        
+        # Clear cached modules
+        for key in list(sys.modules.keys()):
+            if key.startswith('app'):
+                del sys.modules[key]
+        
+        # Import and create fresh config without API key
+        from app.config import Config
+        fresh_config = Config()
         
         mock_websocket = AsyncMock()
         mock_websocket.accept = AsyncMock()
@@ -98,10 +116,12 @@ class TestChatWebSocket:
         mock_websocket.close = AsyncMock()
         
         with patch('app.chat.get_mcp_client_service', return_value=mock_mcp_client):
-            with patch('app.chat.config', config_module.config):
+            with patch('app.chat.config', fresh_config):
                 from app.chat import chat
                 
                 await chat(mock_websocket)
+                
+                sys.path.pop(0)
                 
                 error_call = mock_websocket.send_json.call_args[0][0]
                 assert error_call["type"] == "error"
