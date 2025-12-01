@@ -14,10 +14,7 @@ class TestMCPClient:
     @pytest.mark.unit
     def test_get_mcp_client_service_not_initialized(self):
         """Test get_mcp_client_service raises error when not initialized."""
-        # Reset the global variable
-        import shared.mcp_client as mcp_client
-        mcp_client._mcp_client__mcp_service = None
-        
+        # The autouse fixture resets this, so it should be None
         with pytest.raises(RuntimeError, match="MCP service not initialized"):
             get_mcp_client_service()
 

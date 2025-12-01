@@ -16,14 +16,23 @@ class TestRealmService:
         ]
         mock_openremote_client.realm.get_all_realms = AsyncMock(return_value=realms)
         
-        with patch('src.services.mcp_server.app.services.realm.get_openremote_service') as mock_get_service:
+        with patch('app.services.realm.get_openremote_service') as mock_get_service:
             mock_service = MagicMock()
             mock_service.client = mock_openremote_client
             mock_get_service.return_value = mock_service
             
-            from src.services.mcp_server.app.services.realm import get_all_realms
+            import sys
+
             
-            result = await get_all_realms()
+            sys.path.insert(0, 'src/services/mcp-server')
+
+            
+            from app.services.realm import get_all_realms
+
+            
+            sys.path.pop(0)
+            
+            result = await get_all_realms.fn()
             
             assert isinstance(result, list)
             assert len(result) == 2
@@ -37,14 +46,23 @@ class TestRealmService:
         realm_data = {"name": "master", "displayName": "Master", "enabled": True}
         mock_openremote_client.realm.get_realm = AsyncMock(return_value=realm_data)
         
-        with patch('src.services.mcp_server.app.services.realm.get_openremote_service') as mock_get_service:
+        with patch('app.services.realm.get_openremote_service') as mock_get_service:
             mock_service = MagicMock()
             mock_service.client = mock_openremote_client
             mock_get_service.return_value = mock_service
             
-            from src.services.mcp_server.app.services.realm import get_realm
+            import sys
+
             
-            result = await get_realm("master")
+            sys.path.insert(0, 'src/services/mcp-server')
+
+            
+            from app.services.realm import get_realm
+
+            
+            sys.path.pop(0)
+            
+            result = await get_realm.fn("master")
             
             assert result["name"] == "master"
             assert result["enabled"] is True

@@ -16,14 +16,23 @@ class TestAssetModelService:
         ]
         mock_openremote_client.asset_model.get_asset_infos = AsyncMock(return_value=asset_types)
         
-        with patch('src.services.mcp_server.app.services.asset_model.get_openremote_service') as mock_get_service:
+        with patch('app.services.asset_model.get_openremote_service') as mock_get_service:
             mock_service = MagicMock()
             mock_service.client = mock_openremote_client
             mock_get_service.return_value = mock_service
             
-            from src.services.mcp_server.app.services.asset_model import get_all_asset_types
+            import sys
+
             
-            result = await get_all_asset_types()
+            sys.path.insert(0, 'src/services/mcp-server')
+
+            
+            from app.services.asset_model import get_all_asset_types
+
+            
+            sys.path.pop(0)
+            
+            result = await get_all_asset_types.fn()
             
             assert isinstance(result, list)
             assert len(result) == 2
@@ -41,14 +50,23 @@ class TestAssetModelService:
         }
         mock_openremote_client.asset_model.get_asset_info = AsyncMock(return_value=asset_type_info)
         
-        with patch('src.services.mcp_server.app.services.asset_model.get_openremote_service') as mock_get_service:
+        with patch('app.services.asset_model.get_openremote_service') as mock_get_service:
             mock_service = MagicMock()
             mock_service.client = mock_openremote_client
             mock_get_service.return_value = mock_service
             
-            from src.services.mcp_server.app.services.asset_model import get_asset_type
+            import sys
+
             
-            result = await get_asset_type("ThingAsset")
+            sys.path.insert(0, 'src/services/mcp-server')
+
+            
+            from app.services.asset_model import get_asset_type
+
+            
+            sys.path.pop(0)
+            
+            result = await get_asset_type.fn("ThingAsset")
             
             assert result["assetType"] == "ThingAsset"
             assert "attributeDescriptors" in result

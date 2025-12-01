@@ -12,13 +12,13 @@ class TestHealth:
     @pytest.mark.asyncio
     async def test_health_endpoint_healthy(self, mock_openremote_client):
         """Test health endpoint returns healthy status."""
-        with patch('src.services.mcp_server.app.health.get_openremote_service') as mock_get_service:
+        with patch('app.health.get_openremote_service') as mock_get_service:
             mock_service = MagicMock()
             mock_service.client = mock_openremote_client
             mock_get_service.return_value = mock_service
             
-            from src.services.mcp_server.app.health import health
-            from src.services.mcp_server.app.config import config
+            from app.health import health
+            from app.config import config
             
             response = await health(None)
             
@@ -42,13 +42,13 @@ class TestHealth:
             side_effect=HTTPStatusError("Service unavailable", request=MagicMock(), response=mock_response)
         )
         
-        with patch('src.services.mcp_server.app.health.get_openremote_service') as mock_get_service:
+        with patch('app.health.get_openremote_service') as mock_get_service:
             mock_service = MagicMock()
             mock_service.client = mock_openremote_client
             mock_get_service.return_value = mock_service
             
-            from src.services.mcp_server.app.health import health
-            from src.services.mcp_server.app.config import config
+            from app.health import health
+            from app.config import config
             
             response = await health(None)
             

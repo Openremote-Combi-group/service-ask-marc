@@ -107,12 +107,10 @@ class TestOpenRemoteServiceGlobal:
     """Test global service management functions."""
 
     @pytest.mark.unit
-    def test_get_openremote_service_not_initialized(self):
+    @pytest.mark.asyncio
+    async def test_get_openremote_service_not_initialized(self):
         """Test get_openremote_service raises error when not initialized."""
-        # Need to reset the global variable
-        import shared.openremote_service as or_service
-        or_service._OpenRemoteService__openremote_service = None
-        
+        # The autouse fixture resets this, so it should be None
         with pytest.raises(RuntimeError, match="OpenRemote service not initialized"):
             get_openremote_service()
 
@@ -120,6 +118,8 @@ class TestOpenRemoteServiceGlobal:
     @pytest.mark.asyncio
     async def test_init_openremote_service(self, mock_openremote_client):
         """Test init_openremote_service function."""
+        from openremote_client.schemas import ExternalServiceSchema
+        
         service_schema = ExternalServiceSchema(
             serviceId="test-service",
             label="Test Service",

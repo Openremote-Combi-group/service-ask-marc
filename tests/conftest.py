@@ -8,20 +8,23 @@ import json
 @pytest.fixture
 def mock_openremote_client():
     """Mock OpenRemote client for testing."""
+    from openremote_client.schemas import ExternalServiceSchema
+    
     client = MagicMock()
     
     # Mock status endpoint
     client.status.get_health_status = AsyncMock(return_value={"status": "healthy"})
     
-    # Mock services endpoint
+    # Mock services endpoint - return proper schema object, not dict
+    mock_service_schema = ExternalServiceSchema(
+        serviceId="test-service",
+        instanceId=123,
+        label="Test Service",
+        homepageUrl="http://test",
+        status="AVAILABLE"
+    )
     mock_service_response = MagicMock()
-    mock_service_response.content = {
-        "serviceId": "test-service",
-        "instanceId": 123,
-        "label": "Test Service",
-        "homepageUrl": "http://test",
-        "status": "AVAILABLE"
-    }
+    mock_service_response.content = mock_service_schema
     client.services.register_service = AsyncMock(return_value=mock_service_response)
     client.services.heartbeat = AsyncMock(return_value=None)
     client.services.deregister_service = AsyncMock(return_value=None)
@@ -76,9 +79,40 @@ def mock_mcp_client():
     return client
 
 
+@pytest.fixture(autouse=True)
+def reset_singletons():
+    """Reset global singletons between tests to avoid state leakage."""
+    yield
+    # Reset shared module globals
+    import shared.openremote_service as or_service
+    import shared.mcp_client as mcp_client
+    or_service._OpenRemoteService__openremote_service = None
+    mcp_client._mcp_client__mcp_service = None
+
+
 @pytest.fixture
 def mock_env_vars(monkeypatch):
-    """Set up mock environment variables."""
+    """Set up mock environment variables for testing."""
+    # Clear any existing env vars first
+    env_to_clear = [
+        "OPENREMOTE_URL",
+        "OPENREMOTE_CLIENT_ID", 
+        "OPENREMOTE_CLIENT_SECRET",
+        "OPENREMOTE_VERIFY_SSL",
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "CORS_ALLOWED_DOMAINS",
+        "MCP_CONFIG",
+        "APP_STATIC_FOLDER",
+        "APP_HOMEPAGE_URL",
+        "APP_DEBUG",
+        "BASE_URL",
+    ]
+    
+    for key in env_to_clear:
+        monkeypatch.delenv(key, raising=False)
+    
+    # Set test environment variables
     env_vars = {
         "OPENREMOTE_URL": "http://localhost:8080",
         "OPENREMOTE_CLIENT_ID": "test-client",

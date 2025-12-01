@@ -1,7 +1,7 @@
 """Tests for MCP client API health endpoint."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from httpx import HTTPStatusError, Response
+from httpx import HTTPStatusError
 from starlette.responses import JSONResponse
 
 
@@ -12,13 +12,13 @@ class TestHealth:
     @pytest.mark.asyncio
     async def test_health_endpoint_healthy(self, mock_openremote_client):
         """Test health endpoint returns healthy status."""
-        with patch('src.services.mcp_client_api.app.health.get_openremote_service') as mock_get_service:
+        with patch('app.health.get_openremote_service') as mock_get_service:
             mock_service = MagicMock()
             mock_service.client = mock_openremote_client
             mock_get_service.return_value = mock_service
             
-            from src.services.mcp_client_api.app.health import health
-            from src.services.mcp_client_api.app.config import config
+            from app.health import health
+            from app.config import config
             
             response = await health()
             
@@ -40,13 +40,13 @@ class TestHealth:
             side_effect=HTTPStatusError("Service unavailable", request=MagicMock(), response=mock_response)
         )
         
-        with patch('src.services.mcp_client_api.app.health.get_openremote_service') as mock_get_service:
+        with patch('app.health.get_openremote_service') as mock_get_service:
             mock_service = MagicMock()
             mock_service.client = mock_openremote_client
             mock_get_service.return_value = mock_service
             
-            from src.services.mcp_client_api.app.health import health
-            from src.services.mcp_client_api.app.config import config
+            from app.health import health
+            from app.config import config
             
             response = await health()
             

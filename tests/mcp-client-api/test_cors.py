@@ -10,7 +10,7 @@ class TestCORS:
     @pytest.mark.unit
     def test_cors_initialization(self, mock_env_vars):
         """Test CORS middleware is properly initialized."""
-        from src.services.mcp_client_api.app.cors import init_cors
+        from app.cors import init_cors
         
         app = FastAPI()
         init_cors(app)
@@ -20,20 +20,22 @@ class TestCORS:
         assert "CORSMiddleware" in middleware_classes
 
     @pytest.mark.unit
-    def test_cors_with_allowed_domains(self, mock_env_vars, monkeypatch):
+    def test_cors_with_allowed_domains(self, mock_env_vars):
         """Test CORS with specific allowed domains."""
-        monkeypatch.setenv("CORS_ALLOWED_DOMAINS", "http://localhost:3000,http://example.com")
+        from app.cors import init_cors
+        from app.config import Config
         
-        from src.services.mcp_client_api.app.config import Config
-        from src.services.mcp_client_api.app.cors import init_cors
+        # Create a config with allowed domains
+        # Don't use env var since cors_allowed_domains is a set type and pydantic 
+        # doesn't parse comma-separated strings to sets automatically
         
-        # Need to reload config with new env var
-        config = Config()
-        config.cors_allowed_domains = {"http://localhost:3000", "http://example.com"}
+        # Create mock config with domains
+        mock_config = MagicMock(spec=Config)
+        mock_config.cors_allowed_domains = {"http://localhost:3000", "http://example.com"}
         
         app = FastAPI()
         
-        with patch('src.services.mcp_client_api.app.cors.config', config):
+        with patch('app.cors.config', mock_config):
             init_cors(app)
         
         # Verify middleware was added

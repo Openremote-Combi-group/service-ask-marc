@@ -11,7 +11,7 @@ class TestChatWebSocket:
     @pytest.mark.unit
     def test_model_mapping(self):
         """Test that MODEL_MAPPING contains expected models."""
-        from src.services.mcp_client_api.app.chat import MODEL_MAPPING
+        from app.chat import MODEL_MAPPING
         
         assert "gpt-4o" in MODEL_MAPPING
         assert "gpt-4o-mini" in MODEL_MAPPING
@@ -34,8 +34,8 @@ class TestChatWebSocket:
         mock_websocket.send_json = AsyncMock()
         mock_websocket.close = AsyncMock()
         
-        with patch('src.services.mcp_client_api.app.chat.get_mcp_client_service', return_value=mock_mcp_client):
-            from src.services.mcp_client_api.app.chat import chat
+        with patch('app.chat.get_mcp_client_service', return_value=mock_mcp_client):
+            from app.chat import chat
             
             await chat(mock_websocket)
             
@@ -54,7 +54,7 @@ class TestChatWebSocket:
         
         # Reload config without API key
         from importlib import reload
-        import src.services.mcp_client_api.app.config as config_module
+        import app.config as config_module
         reload(config_module)
         
         mock_websocket = AsyncMock()
@@ -66,9 +66,9 @@ class TestChatWebSocket:
         mock_websocket.send_json = AsyncMock()
         mock_websocket.close = AsyncMock()
         
-        with patch('src.services.mcp_client_api.app.chat.get_mcp_client_service', return_value=mock_mcp_client):
-            with patch('src.services.mcp_client_api.app.chat.config', config_module.config):
-                from src.services.mcp_client_api.app.chat import chat
+        with patch('app.chat.get_mcp_client_service', return_value=mock_mcp_client):
+            with patch('app.chat.config', config_module.config):
+                from app.chat import chat
                 
                 await chat(mock_websocket)
                 
@@ -85,7 +85,7 @@ class TestChatWebSocket:
         monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
         
         from importlib import reload
-        import src.services.mcp_client_api.app.config as config_module
+        import app.config as config_module
         reload(config_module)
         
         mock_websocket = AsyncMock()
@@ -97,9 +97,9 @@ class TestChatWebSocket:
         mock_websocket.send_json = AsyncMock()
         mock_websocket.close = AsyncMock()
         
-        with patch('src.services.mcp_client_api.app.chat.get_mcp_client_service', return_value=mock_mcp_client):
-            with patch('src.services.mcp_client_api.app.chat.config', config_module.config):
-                from src.services.mcp_client_api.app.chat import chat
+        with patch('app.chat.get_mcp_client_service', return_value=mock_mcp_client):
+            with patch('app.chat.config', config_module.config):
+                from app.chat import chat
                 
                 await chat(mock_websocket)
                 
@@ -121,8 +121,8 @@ class TestChatWebSocket:
         mock_websocket.send_json = AsyncMock()
         mock_websocket.close = AsyncMock()
         
-        with patch('src.services.mcp_client_api.app.chat.get_mcp_client_service', return_value=mock_mcp_client):
-            from src.services.mcp_client_api.app.chat import chat
+        with patch('app.chat.get_mcp_client_service', return_value=mock_mcp_client):
+            from app.chat import chat
             
             await chat(mock_websocket)
             
@@ -141,8 +141,8 @@ class TestChatWebSocket:
         mock_websocket.send_json = AsyncMock()
         mock_websocket.close = AsyncMock()
         
-        with patch('src.services.mcp_client_api.app.chat.get_mcp_client_service', return_value=mock_mcp_client):
-            from src.services.mcp_client_api.app.chat import chat
+        with patch('app.chat.get_mcp_client_service', return_value=mock_mcp_client):
+            from app.chat import chat
             
             await chat(mock_websocket)
             
@@ -159,7 +159,7 @@ class TestChatAPI:
     def test_init_chat_api(self):
         """Test chat API router initialization."""
         from fastapi import FastAPI
-        from src.services.mcp_client_api.app.chat import init_chat_api
+        from app.chat import init_chat_api
         
         app = FastAPI()
         init_chat_api(app)
