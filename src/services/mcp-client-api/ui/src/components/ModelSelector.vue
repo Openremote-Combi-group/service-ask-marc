@@ -1,11 +1,17 @@
 <script setup lang="ts">
-  import { ref } from 'vue'
+  import { computed, ref, watch } from 'vue'
+  import { storeToRefs } from 'pinia'
   import { useActiveChatStore } from '@/stores/activeChat.ts'
 
   const activeChatStore = useActiveChatStore()
+  const { selectedModel } = storeToRefs(activeChatStore)
 
-  const currentModel = ref(0)
   const models = ref([
+    {
+      provider: 'OpenRemote',
+      name: 'Local (Ollama Llama3)',
+      id: 'ollama-llama3',
+    },
     {
       provider: 'OpenAI',
       name: 'GPT-4o',
@@ -48,9 +54,33 @@
     },
   ])
 
+  const currentModel = ref<number>(0)
+
+  function syncModelIndex(targetModel: string) {
+    const index = models.value.findIndex((item) => item.id === targetModel)
+    currentModel.value = index >= 0 ? index : 0
+  }
+
+  syncModelIndex(selectedModel.value)
+
+  watch(selectedModel, (modelId) => {
+    syncModelIndex(modelId ?? '')
+  })
+
+  const currentModelName = computed(() => {
+    const index = currentModel.value
+    const selected = models.value[index]
+    return selected ? selected.name : 'Unknown'
+  })
+
   async function selectModel (index: number) {
+    const selected = models.value[index]
+    if (!selected) {
+      return
+    }
+
     currentModel.value = index
-    // activeChatStore.setModel(models.value[index].id)
+    activeChatStore.setModel(selected.id)
 
     // Restart chat with new model
     await activeChatStore.startChat()
@@ -61,7 +91,7 @@
   <v-menu>
     <template #activator="{ props }">
       <v-chip v-bind="props" color="grey-darken-2">
-        Model: {{ '' }}
+        Model: {{ currentModelName }}
       </v-chip>
     </template>
     <v-list>

@@ -29,6 +29,7 @@ class TestConfig:
         assert config.openremote_verify_ssl is False
         assert config.openai_api_key == "test-openai-key"
         assert config.anthropic_api_key == "test-anthropic-key"
+        assert str(config.ollama_base_url).rstrip('/') == "http://127.0.0.1:11434"
 
     @pytest.mark.unit
     def test_config_defaults(self, mock_env_vars):
@@ -54,6 +55,7 @@ class TestConfig:
         assert config.mcp_config_file == "mcp_config.json"
         assert config.openremote_service_id == "MCP-Client-API"
         assert config.openremote_heartbeat_interval == 30
+        assert str(config.ollama_base_url).rstrip('/') == "http://127.0.0.1:11434"
 
     @pytest.mark.unit
     def test_config_optional_api_keys(self, mock_env_vars, monkeypatch):
@@ -78,6 +80,7 @@ class TestConfig:
         # Check that the attributes exist and are None or empty string
         assert hasattr(config, 'openai_api_key')
         assert hasattr(config, 'anthropic_api_key')
+        assert hasattr(config, 'ollama_base_url')
         # Pydantic may return '' for empty env vars, which is falsy
         assert not config.openai_api_key or config.openai_api_key is None
         assert not config.anthropic_api_key or config.anthropic_api_key is None

@@ -103,6 +103,9 @@ This guide assumes you already have an OpenRemote instance running.
     OPENREMOTE_CLIENT_SECRET=<OPENREMOTE_CLIENT_SECRET>
     OPENREMOTE_URL=<OPENREMOTE_URL>
     OPENREMOTE_VERIFY_SSL=1
+
+    # Optional when running Ollama locally (defaults to http://127.0.0.1:11434)
+    OLLAMA_BASE_URL=http://127.0.0.1:11434
    
     # Fill one of the following keys or both!
     OPENAI_API_KEY=

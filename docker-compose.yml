@@ -9,6 +9,7 @@ volumes:
   proxy-data:
   manager-data:
   postgresql-data:
+  ollama-models:
 
 services:
   proxy:
@@ -111,6 +112,8 @@ services:
         condition: service_healthy
       mcp-server:
         condition: service_started
+      ollama:
+        condition: service_started
     ports:
       - "8421:8421"
     volumes:
@@ -126,3 +129,12 @@ services:
 
       # Fill one of the following keys or both!
       OPENAI_API_KEY: ${MCP_OPENAI_API_KEY}
+      OLLAMA_BASE_URL: http://ollama:11434
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama

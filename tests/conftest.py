@@ -101,6 +101,7 @@ def mock_env_vars(monkeypatch):
         "OPENREMOTE_VERIFY_SSL",
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY",
+        "OLLAMA_BASE_URL",
         "CORS_ALLOWED_DOMAINS",
         "MCP_CONFIG",
         "APP_STATIC_FOLDER",
@@ -120,6 +121,7 @@ def mock_env_vars(monkeypatch):
         "OPENREMOTE_VERIFY_SSL": "0",
         "OPENAI_API_KEY": "test-openai-key",
         "ANTHROPIC_API_KEY": "test-anthropic-key",
+        "OLLAMA_BASE_URL": "http://127.0.0.1:11434",
     }
     
     for key, value in env_vars.items():

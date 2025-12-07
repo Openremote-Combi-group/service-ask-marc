@@ -6,7 +6,7 @@ export const useActiveChatStore = defineStore('activeChat', () => {
   let activeChat: WebSocket
   const connectionStatus = ref<'connected' | 'loading' | 'not_connected' | 'failed'>('not_connected')
   const streamingStatus = ref<'stand_by' | 'streaming' | null>(null)
-  const selectedModel = ref<string>('gpt-4o')
+  const selectedModel = ref<string>('ollama-llama3')
   const errorMessage = ref<string | null>(null)
 
   const isConnected = computed(() => connectionStatus.value === 'connected')

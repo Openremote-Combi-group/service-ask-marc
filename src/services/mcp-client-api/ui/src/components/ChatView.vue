@@ -14,8 +14,8 @@
         <div class="d-flex justify-center position-fixed bottom-0 w-100 left-0 pb-4">
           <div class="prompt">
             <PromptBox />
-            <div class="d-flex">
-              <!--              <ModelSelector />-->
+            <div class="d-flex justify-end mt-2">
+              <ModelSelector />
             </div>
           </div>
         </div>
