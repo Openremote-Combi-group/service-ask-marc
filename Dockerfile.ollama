@@ -1,0 +1,7 @@
+FROM ollama/ollama:latest
+
+# Copy entrypoint as project asset (no host FS dependency)
+COPY ollamaentrypoint.sh /ollamaentrypoint.sh
+RUN chmod +x /ollamaentrypoint.sh
+
+ENTRYPOINT ["/bin/sh", "/ollamaentrypoint.sh"]

@@ -257,7 +257,14 @@ async def chat(websocket: WebSocket):
                         "type": "warning",
                         "content": "Failed to load MCP tools; continuing without tool support.",
                     })
-                    logger.exception("Failed to load MCP tools; continuing without tools")
+                    logger.warning(
+                        "Failed to load MCP tools; continuing without tools",
+                        extra={"error": str(load_error)}
+                    )
+                    logger.debug(
+                        "MCP tool loading stack trace",
+                        exc_info=load_error
+                    )
                     tools = []
 
             if tools:
