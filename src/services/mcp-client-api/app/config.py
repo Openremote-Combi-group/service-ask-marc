@@ -31,7 +31,7 @@ class Config(BaseSettings):
 
     openai_api_key: str | None = None
     anthropic_api_key: str | None = None
-    ollama_base_url: HttpUrl | None = "http://127.0.0.1:11434"
+    local_llm_base_url: HttpUrl | None = None
 
     base_url: str = '/'
 

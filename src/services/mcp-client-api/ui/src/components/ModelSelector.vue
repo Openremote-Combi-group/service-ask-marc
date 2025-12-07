@@ -8,9 +8,9 @@
 
   const models = ref([
     {
-      provider: 'OpenRemote',
-      name: 'Local (Ollama Llama3)',
-      id: 'ollama-llama3',
+      provider: 'Local (llama.cpp)',
+      name: 'Llama 3.1 8B Instruct',
+      id: 'llama3.1:8b',
     },
     {
       provider: 'OpenAI',
