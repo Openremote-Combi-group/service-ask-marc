@@ -3,12 +3,11 @@ set -e
 
 ollama serve &
 SERVER_PID=$!
-
-echo "Waiting for Ollama server..."
 sleep 10
 
-echo "Pulling llama3..."
-ollama pull llama3
+# Pull TOOL-SUPPORTING model instead of base llama3
+echo "Pulling llama3.1 (tool support)..."
+ollama pull llama3.1:8b  # or llama3.1:70b if VRAM allows
 
-echo "Ollama ready with llama3 loaded!"
+echo "Ollama ready with llama3.1 (tools enabled)!"
 wait $SERVER_PID

@@ -2,6 +2,9 @@ FROM ghcr.io/astral-sh/uv:alpine AS app-builder
 
 WORKDIR /app
 
+# Pin Python 3.13 to avoid Pydantic V1 compatibility issues with 3.14
+ENV UV_PYTHON=python3.13
+
 # Copy dependency metadata (improves caching) and workspace layout
 COPY ./src/shared/pyproject.toml /app/shared/pyproject.toml
 COPY ./src/services/mcp-client-api/pyproject.toml /app/mcp-client-api/pyproject.toml

@@ -1,8 +1,8 @@
 """Tests for MCP client API chat functionality."""
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, call
 import json
-from uuid import uuid4
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 class TestChatWebSocket:
@@ -38,10 +38,9 @@ class TestChatWebSocket:
         
         with patch('app.chat.get_mcp_client_service', return_value=mock_mcp_client):
             from app.chat import chat
-            
+
             await chat(mock_websocket)
-            
-            # Should send error and close
+
             mock_websocket.send_json.assert_called()
             error_call = mock_websocket.send_json.call_args[0][0]
             assert error_call["type"] == "error"
@@ -147,9 +146,9 @@ class TestChatWebSocket:
         
         with patch('app.chat.get_mcp_client_service', return_value=mock_mcp_client):
             from app.chat import chat
-            
+
             await chat(mock_websocket)
-            
+
             error_call = mock_websocket.send_json.call_args[0][0]
             assert error_call["type"] == "error"
             assert "initialization message" in error_call["content"]
@@ -177,7 +176,7 @@ class TestChatWebSocket:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_chat_fallback_without_agent_tools(self, mock_mcp_client, mock_env_vars, monkeypatch):
+    async def test_chat_fallback_without_agent_tools(self, mock_mcp_client, mock_env_vars):
         """Test chat continues without tools when agent creation is unsupported."""
 
         class FakeChunk:
@@ -230,8 +229,21 @@ class TestChatWebSocket:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_chat_ollama_skips_tool_loading(self, mock_mcp_client, mock_env_vars):
-        """Test Ollama model avoids loading MCP tools and uses direct invocation."""
+    async def test_chat_ollama_uses_agent_and_tools(self, mock_mcp_client, mock_env_vars):
+        """Test Ollama model streams via the agent pipeline and loads MCP tools."""
+
+        class FakeChunk:
+            def __init__(self, content: str):
+                self.content = content
+
+        class FakeAgent:
+            async def astream_events(self, *_args, **_kwargs):
+                yield {
+                    "event": "on_chat_model_stream",
+                    "data": {"chunk": FakeChunk("ollama chunk")},
+                }
+
+        mock_mcp_client.get_tools.return_value = [MagicMock()]
 
         mock_websocket = AsyncMock()
         mock_websocket.accept = AsyncMock()
@@ -247,27 +259,30 @@ class TestChatWebSocket:
         mock_websocket.close = AsyncMock()
 
         with patch('app.chat.get_mcp_client_service', return_value=mock_mcp_client), \
-            patch('app.chat.init_chat_model') as mock_init_model, \
-            patch('app.chat.invoke_ollama_chat', new_callable=AsyncMock) as mock_ollama_call:
-            mock_ollama_call.return_value = "ollama response"
+            patch('app.chat.ChatOllama') as mock_chat_ollama, \
+            patch('app.chat.create_agent', return_value=FakeAgent()) as mock_create_agent:
+            mock_chat_ollama.return_value = MagicMock()
 
             from app.chat import chat
 
             with pytest.raises(RuntimeError):
                 await chat(mock_websocket)
 
-        mock_init_model.assert_not_called()
-        mock_ollama_call.assert_awaited_once()
-        first_call_args = mock_ollama_call.await_args.args
-        assert isinstance(first_call_args[0], list)
-        assert first_call_args[0], "Expected at least one Ollama base URL"
-        mock_mcp_client.get_tools.assert_not_awaited()
+        assert mock_mcp_client.get_tools.await_count == 1
+        mock_create_agent.assert_called_once()
+        mock_chat_ollama.assert_called_once()
+        _, kwargs = mock_chat_ollama.call_args
+        assert kwargs["model"] == "llama3.1:8b"
+        assert kwargs["temperature"] == 0.1
+        assert kwargs["base_url"].rstrip('/') == "http://127.0.0.1:11434"
 
         sent_messages = [args[0] for args, _ in mock_websocket.send_json.call_args_list]
         token_messages = [msg for msg in sent_messages if msg.get("type") == "token"]
-        assert token_messages and token_messages[0]["content"] == "ollama response"
+        assert token_messages and token_messages[0]["content"] == "ollama chunk"
         done_messages = [msg for msg in sent_messages if msg.get("type") == "done"]
-        assert done_messages and done_messages[0]["content"] == "ollama response"
+        assert done_messages and done_messages[0]["content"] == "ollama chunk"
+
+        mock_websocket.close.assert_not_called()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
