@@ -1,0 +1,142 @@
+# .github/workflows/ask-marc-mcp-ci.yml
+
+name: Ask Marc MCP CI/CD
+
+on:
+  push:
+    branches: [ develop, main ]
+  pull_request:
+    branches: [ develop, main ]
+
+jobs:
+  build-and-test:
+    name: Build + Static Checks + Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Static analysis (lint + type check)
+        run: |
+          ruff check src tests
+          mypy src
+
+      - name: Run unit tests (MCP client + server)
+        run: |
+          pytest tests/unit --maxfail=1 --disable-warnings --cov=src --cov-report=xml
+
+      - name: Build Docker images (client + server)
+        run: |
+          docker build -t ask-marc-mcp-client:ci -f docker/client.Dockerfile .
+          docker build -t ask-marc-mcp-server:ci -f docker/server.Dockerfile .
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+  test-env:
+    name: DTAP: Test (Integration)
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    environment: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Load images from previous job (if stored in registry)
+        run: |
+          echo "Pulling images from registry for test environment"
+          # docker pull ghcr.io/org/ask-marc-mcp-client:${{ github.sha }}
+          # docker pull ghcr.io/org/ask-marc-mcp-server:${{ github.sha }}
+
+      - name: Start MCP + OpenRemote stack (Test)
+        run: |
+          docker compose -f docker-compose.test.yml up -d
+          docker ps
+
+      - name: Run integration tests (MCP ↔ OpenRemote)
+        env:
+          OPENREMOTE_BASE_URL: ${{ secrets.TEST_OPENREMOTE_BASE_URL }}
+          OPENREMOTE_API_TOKEN: ${{ secrets.TEST_OPENREMOTE_API_TOKEN }}
+        run: |
+          pytest tests/integration --maxfail=1 --disable-warnings
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose -f docker-compose.test.yml down
+
+  acceptance-env:
+    name: DTAP: Acceptance (Regression)
+    runs-on: ubuntu-latest
+    needs: test-env
+    if: github.ref == 'refs/heads/main'
+    environment: acceptance
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Acceptance OpenRemote
+        env:
+          SSH_HOST: ${{ secrets.ACCEPTANCE_SSH_HOST }}
+          SSH_USER: ${{ secrets.ACCEPTANCE_SSH_USER }}
+          SSH_KEY:  ${{ secrets.ACCEPTANCE_SSH_KEY }}
+        run: |
+          echo "Deploying MCP client and server to Acceptance via SSH"
+          # Example: scp updated docker-compose to acceptance host and restart
+          # ssh -i "$SSH_KEY" "$SSH_USER@$SSH_HOST" \
+          #   "cd /opt/ask-marc && docker compose pull && docker compose up -d"
+
+      - name: Run smoke and regression tests against Acceptance
+        env:
+          OPENREMOTE_BASE_URL: ${{ secrets.ACC_OPENREMOTE_BASE_URL }}
+          OPENREMOTE_API_TOKEN: ${{ secrets.ACC_OPENREMOTE_API_TOKEN }}
+        run: |
+          pytest tests/smoke tests/regression --maxfail=1 --disable-warnings
+
+  production-env:
+    name: DTAP: Production (Deploy + Smoke)
+    runs-on: ubuntu-latest
+    needs: acceptance-env
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - name: Manual approval gate
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: "product-owner,tech-lead"
+          minimum-approvals: 1
+
+      - name: Deploy to Production OpenRemote
+        env:
+          SSH_HOST: ${{ secrets.PROD_SSH_HOST }}
+          SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          SSH_KEY:  ${{ secrets.PROD_SSH_KEY }}
+        run: |
+          echo "Deploying MCP client and server to Production via SSH"
+          # ssh -i "$SSH_KEY" "$SSH_USER@$SSH_HOST" \
+          #   "cd /opt/ask-marc && docker compose pull && docker compose up -d"
+
+      - name: Run production smoke tests
+        env:
+          OPENREMOTE_BASE_URL: ${{ secrets.PROD_OPENREMOTE_BASE_URL }}
+          OPENREMOTE_API_TOKEN: ${{ secrets.PROD_OPENREMOTE_API_TOKEN }}
+        run: |
+          pytest tests/smoke --maxfail=1 --disable-warnings

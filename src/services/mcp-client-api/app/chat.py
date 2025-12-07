@@ -107,7 +107,7 @@ async def chat(websocket: WebSocket):
             await websocket.close()
             return
 
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
         await websocket.send_json({
             "type": "error",
             "content": "Invalid message format"

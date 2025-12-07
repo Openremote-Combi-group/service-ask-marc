@@ -1,0 +1,13 @@
+{
+  "python.analysis.extraPaths": [
+    "./src/services/mcp-server",
+    "./src/services/mcp-client-api", 
+    "./src/shared"
+  ],
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": [
+    "tests",
+    "-v"
+  ],
+  "python.testing.unittestEnabled": false
+}
