@@ -1,4 +1,5 @@
 import json
+import logging
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -14,6 +15,7 @@ from shared.mcp_client import get_mcp_client_service
 from .config import config
 
 router = APIRouter()
+logger = logging.getLogger("mcp_client_api.chat")
 
 # Model mapping for langchain init_chat_model
 MODEL_MAPPING = {
@@ -54,11 +56,20 @@ async def invoke_ollama_chat(base_urls: list[str], model_name: str, messages: li
 
     last_error: Exception | None = None
 
+    logger.debug(
+        "Preparing Ollama request",
+        extra={
+            "model": model_name,
+            "base_urls": base_urls,
+            "message_types": [message.type for message in messages],
+        }
+    )
+
     async with httpx.AsyncClient(timeout=60.0) as client:
         for base_url in base_urls:
             target_url = f"{base_url.rstrip('/')}/api/chat"
             try:
-                print(f"Calling Ollama at {target_url}")
+                logger.debug("Calling Ollama", extra={"target_url": target_url})
                 response = await client.post(target_url, json=payload)
                 response.raise_for_status()
                 data = response.json()
@@ -72,26 +83,55 @@ async def invoke_ollama_chat(base_urls: list[str], model_name: str, messages: li
 
                 return ""
             except httpx.HTTPStatusError as exc:
+                logger.warning(
+                    "Ollama responded with HTTP error",
+                    extra={
+                        "target_url": target_url,
+                        "status_code": exc.response.status_code,
+                        "response_text": exc.response.text,
+                    }
+                )
+                if exc.response.status_code == 404 and "not found" in exc.response.text.lower():
+                    raise RuntimeError(
+                        f"Ollama model '{model_name}' is not available. Run `ollama pull {model_name}` on the host serving {target_url} and try again."
+                    ) from exc
                 raise RuntimeError(
                     f"Ollama responded with status code {exc.response.status_code}: {exc.response.text}"
                 ) from exc
             except httpx.RequestError as exc:
                 last_error = exc
-                print(f"Failed to reach Ollama at {target_url}: {exc}")
+                logger.warning(
+                    "Failed to reach Ollama host",
+                    extra={"target_url": target_url, "error": str(exc)}
+                )
                 continue
 
     if last_error:
+        logger.error(
+            "Unable to reach Ollama hosts",
+            extra={"base_urls": base_urls, "last_error": str(last_error)}
+        )
         raise RuntimeError(
             "Unable to reach Ollama host(s): " + ", ".join(base_urls)
             + f". Last error: {last_error}"
         )
 
+    logger.error(
+        "Ollama hosts exhausted without specific error",
+        extra={"base_urls": base_urls}
+    )
     raise RuntimeError("Unable to reach Ollama host without specific error")
 
 
 @router.websocket('/chat')
 async def chat(websocket: WebSocket):
     await websocket.accept()
+    logger.info(
+        "WebSocket connection accepted",
+        extra={
+            "client": getattr(websocket, "client", None),
+        }
+    )
 
     mcp_service = get_mcp_client_service()
 
@@ -107,9 +147,11 @@ async def chat(websocket: WebSocket):
     # Wait for an initial message with model selection
     try:
         initial_message = await websocket.receive_json()
+        logger.debug("Initial websocket message received", extra={"message_type": initial_message.get('type')})
 
         if initial_message.get('type') == 'init':
             selected_model = initial_message.get('model', 'gpt-4o')
+            logger.debug("Client selected model", extra={"model_id": selected_model})
 
             # Validate model exists
             if selected_model not in MODEL_MAPPING:
@@ -117,11 +159,21 @@ async def chat(websocket: WebSocket):
                     "type": "error",
                     "content": f"Invalid model selected: {selected_model}"
                 })
-                print("Client error (Invalid model selected)")
+                logger.error(
+                    "Client selected invalid model",
+                    extra={"model_id": selected_model}
+                )
                 await websocket.close()
                 return
 
             model_config = MODEL_MAPPING[selected_model]
+            logger.debug(
+                "Resolved model configuration",
+                extra={
+                    "model_provider": model_config['model_provider'],
+                    "model": model_config['model'],
+                }
+            )
 
             # Check if API key is configured or required
             if model_config['model_provider'] == 'openai' and not config.openai_api_key:
@@ -129,7 +181,7 @@ async def chat(websocket: WebSocket):
                     "type": "error",
                     "content": "OpenAI API key is not configured. Please add OPENAI_API_KEY to your environment variables."
                 })
-                print("Client error (OpenAI API key not configured)")
+                logger.error("OpenAI API key not configured")
                 await websocket.close()
                 return
 
@@ -138,7 +190,7 @@ async def chat(websocket: WebSocket):
                     "type": "error",
                     "content": "Anthropic API key is not configured. Please add ANTHROPIC_API_KEY to your environment variables."
                 })
-                print("Client error (Anthropic API key not configured)")
+                logger.error("Anthropic API key not configured")
                 await websocket.close()
                 return
 
@@ -146,6 +198,13 @@ async def chat(websocket: WebSocket):
             tools: list = []
             agent = None
             supports_streaming = model_config['model_provider'] != 'ollama'
+            logger.debug(
+                "Preparing model pipeline",
+                extra={
+                    "supports_streaming": supports_streaming,
+                    "provider": model_config['model_provider'],
+                }
+            )
 
             if model_config['model_provider'] == 'ollama':
                 if not config.ollama_base_url:
@@ -153,7 +212,7 @@ async def chat(websocket: WebSocket):
                         "type": "error",
                         "content": "Ollama base URL is not configured. Please add OLLAMA_BASE_URL to your environment variables or .env file."
                     })
-                    print("Client error (Ollama base URL not configured)")
+                    logger.error("Ollama base URL not configured")
                     await websocket.close()
                     return
 
@@ -161,6 +220,13 @@ async def chat(websocket: WebSocket):
                     "model": model_config['model'],
                     "base_url": str(config.ollama_base_url),
                 }
+                logger.info(
+                    "Configured Ollama model",
+                    extra={
+                        "model": ollama_config['model'],
+                        "base_url": ollama_config['base_url'],
+                    }
+                )
 
                 model = None
             else:
@@ -175,20 +241,24 @@ async def chat(websocket: WebSocket):
                         "type": "error",
                         "content": f"Failed to initialize AI model: {str(e)}"
                     })
-                    print("Failed to initialize AI model: ", e)
+                    logger.exception("Failed to initialize AI model")
                     await websocket.close()
                     return
 
                 try:
+                    logger.debug("Loading MCP tools")
                     tools = await mcp_service.get_tools()
+                    logger.debug(
+                        "Loaded MCP tools",
+                        extra={"tool_count": len(tools)}
+                    )
                 except Exception as load_error:
                     await websocket.send_json({
-                        "type": "error",
-                        "content": f"Failed to load MCP tools: {load_error}",
+                        "type": "warning",
+                        "content": "Failed to load MCP tools; continuing without tool support.",
                     })
-                    print("Failed to load MCP tools: ", load_error)
-                    await websocket.close()
-                    return
+                    logger.exception("Failed to load MCP tools; continuing without tools")
+                    tools = []
 
             if tools:
                 try:
@@ -201,13 +271,13 @@ async def chat(websocket: WebSocket):
                         "type": "warning",
                         "content": "Selected model does not support tool usage. Continuing without MCP tools.",
                     })
-                    print("Selected model does not support tool usage; continuing without tools.")
+                    logger.warning("Selected model does not support tool usage; continuing without tools")
         else:
             await websocket.send_json({
                 "type": "error",
                 "content": "Expected initialization message"
             })
-            print("Web socket error (Invalid json): ")
+            logger.error("Initialization message invalid or missing")
             await websocket.close()
             return
 
@@ -216,7 +286,7 @@ async def chat(websocket: WebSocket):
             "type": "error",
             "content": "Invalid message format"
         })
-        print("Web socket error (Invalid json): ", e)
+        logger.exception("Invalid JSON received during initialization")
         await websocket.close()
         return
     except Exception as e:
@@ -225,15 +295,17 @@ async def chat(websocket: WebSocket):
             "content": f"Connection error: {str(e)}"
         })
         await websocket.close()
-        print("Web socket error: ", e)
+        logger.exception("Unexpected error during initialization")
         return
 
     while True:
         try:
             await websocket.send_json({"type": "ready"})
             human_prompt = await websocket.receive_text()
+            prompt_preview = human_prompt[:200] + ('...' if len(human_prompt) > 200 else '')
+            logger.debug("Received human prompt", extra={"preview": prompt_preview})
         except WebSocketDisconnect:
-            print("Client disconnected from chat websocket")
+            logger.info("Client disconnected from chat websocket")
             break
 
         human_message = HumanMessage(
@@ -256,6 +328,7 @@ async def chat(websocket: WebSocket):
         done_sent = False
 
         if agent:
+            logger.debug("Streaming response via agent")
             async for event in agent.astream_events(
                 {"messages": messages},
                 version="v2"
@@ -313,6 +386,14 @@ async def chat(websocket: WebSocket):
                         base_urls.append(fallback_url)
 
             try:
+                logger.info(
+                    "Invoking Ollama model",
+                    extra={
+                        "model": ollama_config["model"],
+                        "base_urls": base_urls,
+                        "message_count": len(messages),
+                    }
+                )
                 fallback_content = await invoke_ollama_chat(
                     base_urls,
                     ollama_config["model"],
@@ -323,10 +404,12 @@ async def chat(websocket: WebSocket):
                     "type": "error",
                     "content": f"Local model invocation failed: {ollama_error}",
                 })
-                print("Local model invocation failed: ", ollama_error)
+                logger.exception("Local model invocation failed")
                 continue
 
             accumulated_content = fallback_content or ""
+            response_preview = accumulated_content[:200] + ('...' if len(accumulated_content) > 200 else '')
+            logger.debug("Ollama response received", extra={"preview": response_preview})
 
             if accumulated_content:
                 await websocket.send_json({
@@ -351,6 +434,7 @@ async def chat(websocket: WebSocket):
         else:
             if supports_streaming:
                 try:
+                    logger.debug("Streaming response via remote model")
                     async for chunk in model.astream(messages):
                         if hasattr(chunk, "content") and chunk.content:
                             accumulated_content += chunk.content
@@ -366,29 +450,36 @@ async def chat(websocket: WebSocket):
                     })
                     done_sent = True
                 except (NotImplementedError, ValueError) as stream_error:
-                    print("Model streaming unavailable, falling back to ainvoke: ", stream_error)
+                    logger.warning(
+                        "Model streaming unavailable, falling back to ainvoke",
+                        extra={"error": str(stream_error)},
+                        exc_info=True
+                    )
                     supports_streaming = False
                 except Exception as stream_error:
                     await websocket.send_json({
                         "type": "error",
                         "content": f"Model streaming failed: {stream_error}"
                     })
-                    print("Model streaming failed: ", stream_error)
+                    logger.exception("Model streaming failed")
                     continue
 
             if not done_sent:
                 try:
+                    logger.debug("Invoking remote model without streaming")
                     fallback_response = await model.ainvoke(messages)
                 except Exception as invoke_error:
                     await websocket.send_json({
                         "type": "error",
                         "content": f"Model invocation failed: {invoke_error}"
                     })
-                    print("Model invocation failed: ", invoke_error)
+                    logger.exception("Model invocation failed")
                     continue
 
                 fallback_content = getattr(fallback_response, "content", str(fallback_response)) or ""
                 accumulated_content = fallback_content
+                response_preview = accumulated_content[:200] + ('...' if len(accumulated_content) > 200 else '')
+                logger.debug("Remote model response received", extra={"preview": response_preview})
 
                 if fallback_content:
                     await websocket.send_json({

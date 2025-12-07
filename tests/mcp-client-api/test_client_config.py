@@ -20,7 +20,7 @@ class TestConfig:
         from app.config import Config
         sys.path.pop(0)
         
-        config = Config()
+        config = Config(_env_file=None)
         
         # HttpUrl returns a Pydantic HttpUrl object, convert to string for comparison
         assert str(config.openremote_url) == "http://localhost:8080/"
@@ -44,7 +44,7 @@ class TestConfig:
         from app.config import Config
         sys.path.pop(0)
         
-        config = Config()
+        config = Config(_env_file=None)
         
         assert config.app_debug is False
         assert config.app_static_folder == "static"
@@ -75,7 +75,7 @@ class TestConfig:
         from app.config import Config
         sys.path.pop(0)
         
-        config = Config()
+        config = Config(_env_file=None)
         
         # Check that the attributes exist and are None or empty string
         assert hasattr(config, 'openai_api_key')

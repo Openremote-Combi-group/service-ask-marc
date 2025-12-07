@@ -20,7 +20,7 @@ class TestConfig:
         from app.config import Config
         sys.path.pop(0)
         
-        config = Config()
+        config = Config(_env_file=None)
         
         # HttpUrl returns Pydantic object, convert to string
         assert str(config.openremote_url) == "http://localhost:8080/"
@@ -43,7 +43,7 @@ class TestConfig:
         from app.config import Config
         sys.path.pop(0)
         
-        config = Config()
+        config = Config(_env_file=None)
         
         assert config.app_debug is False
         assert config.base_url == "/"

@@ -65,7 +65,7 @@ class TestChatWebSocket:
         
         # Import and create fresh config without API key
         from app.config import Config
-        fresh_config = Config()
+        fresh_config = Config(_env_file=None)
         fresh_config.openai_api_key = None
         
         mock_websocket = AsyncMock()
@@ -107,7 +107,7 @@ class TestChatWebSocket:
         
         # Import and create fresh config without API key
         from app.config import Config
-        fresh_config = Config()
+        fresh_config = Config(_env_file=None)
         fresh_config.anthropic_api_key = None
         
         mock_websocket = AsyncMock()

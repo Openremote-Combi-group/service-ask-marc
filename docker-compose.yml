@@ -138,3 +138,15 @@ services:
       - "11434:11434"
     volumes:
       - ollama-models:/root/.ollama
+    environment:
+      OLLAMA_AUTO_PULL_MODELS: "llama3"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        models="$$OLLAMA_AUTO_PULL_MODELS"
+        ollama serve
+        echo "Pulling Ollama models: llama3"
+        ollama pull llama3
+        exec ollama serve
