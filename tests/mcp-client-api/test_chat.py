@@ -231,10 +231,7 @@ class TestChatWebSocket:
     @pytest.mark.unit
     @pytest.mark.asyncio
     async def test_chat_ollama_skips_tool_loading(self, mock_mcp_client, mock_env_vars):
-        """Test Ollama model avoids loading MCP tools and uses ainvoke directly."""
-
-        class Response:
-            content = "ollama response"
+        """Test Ollama model avoids loading MCP tools and uses direct invocation."""
 
         mock_websocket = AsyncMock()
         mock_websocket.accept = AsyncMock()
@@ -249,23 +246,22 @@ class TestChatWebSocket:
         mock_websocket.send_json = AsyncMock()
         mock_websocket.close = AsyncMock()
 
-        fake_model = MagicMock()
-        fake_model.astream = AsyncMock()
-        fake_model.ainvoke = AsyncMock(return_value=Response())
-
         with patch('app.chat.get_mcp_client_service', return_value=mock_mcp_client), \
             patch('app.chat.init_chat_model') as mock_init_model, \
-            patch('langchain_community.chat_models.ChatOllama', return_value=fake_model) as mock_chat_ollama:
+            patch('app.chat.invoke_ollama_chat', new_callable=AsyncMock) as mock_ollama_call:
+            mock_ollama_call.return_value = "ollama response"
+
             from app.chat import chat
 
             with pytest.raises(RuntimeError):
                 await chat(mock_websocket)
 
         mock_init_model.assert_not_called()
-        mock_chat_ollama.assert_called_once()
+        mock_ollama_call.assert_awaited_once()
+        first_call_args = mock_ollama_call.await_args.args
+        assert isinstance(first_call_args[0], list)
+        assert first_call_args[0], "Expected at least one Ollama base URL"
         mock_mcp_client.get_tools.assert_not_awaited()
-        fake_model.astream.assert_not_called()
-        fake_model.ainvoke.assert_awaited()
 
         sent_messages = [args[0] for args, _ in mock_websocket.send_json.call_args_list]
         token_messages = [msg for msg in sent_messages if msg.get("type") == "token"]

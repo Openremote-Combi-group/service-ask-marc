@@ -1,4 +1,5 @@
 import json
+from urllib.parse import urlparse
 from uuid import uuid4
 
 import httpx
@@ -28,8 +29,11 @@ MODEL_MAPPING = {
 }
 
 
-async def invoke_ollama_chat(base_url: str, model_name: str, messages: list[BaseMessage]) -> str:
+async def invoke_ollama_chat(base_urls: list[str], model_name: str, messages: list[BaseMessage]) -> str:
     """Call the Ollama chat endpoint and return the assistant content."""
+
+    if not base_urls:
+        raise RuntimeError("No Ollama hosts configured")
 
     role_map = {
         "human": "user",
@@ -48,29 +52,41 @@ async def invoke_ollama_chat(base_url: str, model_name: str, messages: list[Base
         "stream": False,
     }
 
+    last_error: Exception | None = None
+
     async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.post(
-            f"{base_url.rstrip('/')}/api/chat",
-            json=payload,
+        for base_url in base_urls:
+            target_url = f"{base_url.rstrip('/')}/api/chat"
+            try:
+                print(f"Calling Ollama at {target_url}")
+                response = await client.post(target_url, json=payload)
+                response.raise_for_status()
+                data = response.json()
+
+                if isinstance(data, dict):
+                    if "message" in data and isinstance(data["message"], dict):
+                        return data["message"].get("content", "") or ""
+
+                    if "response" in data:
+                        return data.get("response") or ""
+
+                return ""
+            except httpx.HTTPStatusError as exc:
+                raise RuntimeError(
+                    f"Ollama responded with status code {exc.response.status_code}: {exc.response.text}"
+                ) from exc
+            except httpx.RequestError as exc:
+                last_error = exc
+                print(f"Failed to reach Ollama at {target_url}: {exc}")
+                continue
+
+    if last_error:
+        raise RuntimeError(
+            "Unable to reach Ollama host(s): " + ", ".join(base_urls)
+            + f". Last error: {last_error}"
         )
 
-    try:
-        response.raise_for_status()
-    except httpx.HTTPStatusError as exc:
-        raise RuntimeError(
-            f"Ollama call failed with status code {exc.response.status_code}: {exc.response.text}"
-        ) from exc
-
-    data = response.json()
-
-    if isinstance(data, dict):
-        if "message" in data and isinstance(data["message"], dict):
-            return data["message"].get("content", "") or ""
-
-        if "response" in data:
-            return data.get("response") or ""
-
-    return ""
+    raise RuntimeError("Unable to reach Ollama host without specific error")
 
 
 @router.websocket('/chat')
@@ -144,7 +160,6 @@ async def chat(websocket: WebSocket):
                 ollama_config = {
                     "model": model_config['model'],
                     "base_url": str(config.ollama_base_url),
-                    "temperature": 0.1,
                 }
 
                 model = None
@@ -289,9 +304,17 @@ async def chat(websocket: WebSocket):
             messages.append(ai_message)
 
         elif ollama_config:
+            base_urls = [ollama_config["base_url"]]
+            parsed_url = urlparse(ollama_config["base_url"])
+
+            if parsed_url.hostname in {"127.0.0.1", "localhost"}:
+                for fallback_url in ("http://host.docker.internal:11434", "http://ollama:11434"):
+                    if fallback_url not in base_urls:
+                        base_urls.append(fallback_url)
+
             try:
                 fallback_content = await invoke_ollama_chat(
-                    ollama_config["base_url"],
+                    base_urls,
                     ollama_config["model"],
                     messages,
                 )

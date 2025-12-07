@@ -20,7 +20,7 @@ export type HumanMessage = {
   content: string
 }
 
-export type StreamResponse = StreamResponseReady | StreamResponseError | StreamResponseHumanMessage | StreamResponseToken | StreamResponseToolStart | StreamResponseToolEnd | StreamResponseDone
+export type StreamResponse = StreamResponseReady | StreamResponseError | StreamResponseWarning | StreamResponseHumanMessage | StreamResponseToken | StreamResponseToolStart | StreamResponseToolEnd | StreamResponseDone
 
 export type StreamResponseReady = {
   type: 'ready'
@@ -28,6 +28,11 @@ export type StreamResponseReady = {
 
 export type StreamResponseError = {
   type: 'error'
+  content: string
+}
+
+export type StreamResponseWarning = {
+  type: 'warning'
   content: string
 }
 

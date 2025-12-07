@@ -58,8 +58,12 @@ export const useActiveChatStore = defineStore('activeChat', () => {
         }
 
         case 'error': {
-          connectionStatus.value = 'failed'
-          streamingStatus.value = null
+          streamingStatus.value = 'stand_by'
+          errorMessage.value = streamResponse.content
+          break
+        }
+
+        case 'warning': {
           errorMessage.value = streamResponse.content
           break
         }
