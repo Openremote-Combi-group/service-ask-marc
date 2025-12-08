@@ -128,35 +128,35 @@ async def init_asset_service(mcp: FastMCP):
     logger.info(f"Compiled {len(asset_models.content)} asset tools.")
 
     await mcp.import_server(asset_mcp, prefix="asset")
-#
-# @asset_mcp.tool
-# async def update_asset(asset_id: str, asset_object_schema: AssetObjectSchema):
-#     """Update an existing asset. First retrieve the asset with 'get_asset', modify the desired fields, then call this."""
-#     openremote_service = get_openremote_service()
-#
-#     return await openremote_service.client.asset.update_asset(asset_id, asset_object_schema)
-#
-#
-# @asset_mcp.tool
-# async def delete_asset(asset_id: str):
-#     """Delete an asset by ID. Use with caution - this action cannot be undone."""
-#     openremote_service = get_openremote_service()
-#
-#     # Note: The API expects the asset_id in the body, but we'll handle it via query or endpoint
-#     return await openremote_service.client.asset.delete_asset()
-#
-#
-# @asset_mcp.tool
-# async def write_attribute_value(asset_id: str, attribute_name: str, value: str | int | float | bool):
-#     """Write/update a single attribute value on an asset. Use this to change sensor values, settings, etc."""
-#     openremote_service = get_openremote_service()
-#
-#     return await openremote_service.client.asset.write_attribute_value(asset_id, attribute_name, value)
-#
-#
-# @asset_mcp.tool
-# async def write_attribute_values(attribute_state_schema: AttributeStateSchema):
-#     """Write/update multiple attribute values at once. More efficient than writing individually."""
-#     openremote_service = get_openremote_service()
-#
-#     return await openremote_service.client.asset.write_attribute_values(attribute_state_schema)
+
+@asset_mcp.tool
+async def update_asset(asset_id: str, asset_object_schema: AssetObjectSchema):
+    """Update an existing asset. First retrieve the asset with 'get_asset', modify the desired fields, then call this."""
+    openremote_service = get_openremote_service()
+
+    return await openremote_service.client.asset.update_asset(asset_id, asset_object_schema)
+
+
+@asset_mcp.tool
+async def delete_asset(asset_id: str):
+    """Delete an asset by ID. Use with caution - this action cannot be undone."""
+    openremote_service = get_openremote_service()
+
+    # Note: The API expects the asset_id in the body, but we'll handle it via query or endpoint
+    return await openremote_service.client.asset.delete_asset()
+
+
+@asset_mcp.tool
+async def write_attribute_value(asset_id: str, attribute_name: str, value: str | int | float | bool):
+    """Write/update a single attribute value on an asset. Use this to change sensor values, settings, etc."""
+    openremote_service = get_openremote_service()
+
+    return await openremote_service.client.asset.write_attribute_value(asset_id, attribute_name, value)
+
+
+@asset_mcp.tool
+async def write_attribute_values(attribute_state_schema: AttributeStateSchema):
+    """Write/update multiple attribute values at once. More efficient than writing individually."""
+    openremote_service = get_openremote_service()
+
+    return await openremote_service.client.asset.write_attribute_values(attribute_state_schema)
