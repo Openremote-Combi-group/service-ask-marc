@@ -1,21 +1,54 @@
 from fastmcp import FastMCP
 
 from shared.openremote_service import get_openremote_service
+from ..context import require_realm_access, get_user_context
 
 realm_mcp = FastMCP("Realm Service")
 
 
 @realm_mcp.tool
 async def get_all_realms():
-    """Retrieve all realms."""
+    """Retrieve all realms accessible by the authenticated user.
+    
+    Super users (master realm admins) can see all realms.
+    Regular users can only see their authenticated realm.
+    """
     openremote_service = get_openremote_service()
-
-    return await openremote_service.client.realm.get_all_realms()
+    user_context = get_user_context()
+    
+    all_realms = await openremote_service.client.realm.get_all_realms()
+    
+    # If no user context (middleware disabled), return all realms
+    if user_context is None:
+        return all_realms
+    
+    # If super user, return all realms
+    if user_context.is_super_user():
+        return all_realms
+    
+    # Filter to only the user's authenticated realm
+    authenticated_realm = user_context.get_authenticated_realm_name()
+    filtered_realms = [r for r in all_realms if r.name == authenticated_realm]
+    
+    return filtered_realms
 
 
 @realm_mcp.tool
 async def get_realm(realm_name: str):
-    """Retrieve details about the currently authenticated and active realm."""
+    """Retrieve details about a specific realm.
+    
+    Users can only access realms they have permission for:
+    - Their authenticated realm
+    - Master realm (if they are a super user)
+    
+    Args:
+        realm_name: The name of the realm to retrieve.
+        
+    Raises:
+        PermissionError: If the user does not have access to the specified realm.
+    """
+    # Check realm access
+    require_realm_access(realm_name)
+    
     openremote_service = get_openremote_service()
-
     return await openremote_service.client.realm.get_realm(realm_name)

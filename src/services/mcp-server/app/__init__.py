@@ -2,9 +2,11 @@ from contextlib import asynccontextmanager
 
 from fastmcp import FastMCP
 from openremote_client.schemas import ExternalServiceSchema
+from starlette.middleware import Middleware
 
 from shared.openremote_service import init_openremote_service
 from .config import config
+from .dependencies import get_openremote_issuers
 from .health import init_health
 from .services import init_services
 
@@ -46,4 +48,26 @@ def extend_lifespan(original_lifespan):
     return combined_lifespan
 
 app.router.lifespan_context = extend_lifespan(app.router.lifespan_context)
+
+
+# Add Keycloak middleware if enabled
+if config.keycloak_middleware_enabled:
+    from middlewares.keycloak import KeycloakMiddleware
+    
+    # Excluded routes that don't require authentication
+    excluded_routes = [
+        "/api/health",
+        "/health",
+        "/docs",
+        "/redoc",
+        "/openapi.json",
+    ]
+    
+    # Add the middleware to the app
+    app.add_middleware(
+        KeycloakMiddleware,
+        excluded_routes=excluded_routes,
+        issuer_provider=get_openremote_issuers,
+    )
+
 

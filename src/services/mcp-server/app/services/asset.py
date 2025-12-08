@@ -4,6 +4,7 @@ from openremote_client.schemas import AssetQuerySchema, RealmPredicateSchema, As
 from pydantic import Field, BaseModel
 
 from shared.openremote_service import get_openremote_service
+from ..context import require_realm_access
 
 asset_mcp = FastMCP("Asset Service")
 
@@ -17,9 +18,22 @@ async def asset_query(asset_query_schema: AssetQuerySchemaDescription):
     """
     Lists all assets available.
 
-    If 403 is returned, that either means you don't have to correct access rights or the realms you specified do not exist.
+    If 403 is returned, that either means you don't have the correct access rights or the realms you specified do not exist.
     Try calling the 'get_all_realms' tool to see which realms are available.
+    
+    Access control: Users can only query assets in realms they have access to.
     """
+    # Check realm access if realm is specified
+    if asset_query_schema.realm and asset_query_schema.realm.name:
+        try:
+            require_realm_access(asset_query_schema.realm.name)
+        except PermissionError as e:
+            return {
+                "error": "Permission denied",
+                "detail": str(e),
+                "status_code": 403,
+            }
+    
     openremote_service = get_openremote_service()
 
     try:
@@ -89,8 +103,19 @@ async def create_asset(name: str, attributes: dict[str, AssetAttributeSchema], t
    4. If OpenRemote returns 400:
         - It means the schema is wrong or missing required attribute fields.
         - You must ask the user for missing information or generate logical defaults.
-
+        
+   Access control: Users can only create assets in realms they have access to.
    """
+    # Check realm access if realm is specified
+    if realm:
+        try:
+            require_realm_access(realm)
+        except PermissionError as e:
+            return {
+                "error": "Permission denied",
+                "detail": str(e),
+            }
+    
     openremote_service = get_openremote_service()
 
     try:

@@ -73,7 +73,14 @@ class TestConfig:
         from app.config import Config
         sys.path.pop(0)
         
-        config = Config()
+        # Create config with explicit required values, no API keys
+        # Use _env_file=None to prevent loading from .env file
+        config = Config(
+            openremote_url='http://localhost:8080',
+            openremote_client_id='test-client',
+            openremote_client_secret='test-secret',
+            _env_file=None  # Disable .env file loading
+        )
         
         # Check that the attributes exist and are None or empty string
         assert hasattr(config, 'openai_api_key')

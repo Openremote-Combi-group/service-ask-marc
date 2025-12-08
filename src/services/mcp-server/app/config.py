@@ -13,11 +13,16 @@ class Config(BaseSettings):
     app_debug: bool = False
 
     openremote_url: HttpUrl
+    openremote_keycloak_url: str = "http://localhost:8081/auth"
+    openremote_realm: str = "master"
     openremote_client_id: str
     openremote_client_secret: str
     openremote_verify_ssl: bool = True
     openremote_service_id: str = 'MCP-Server'
     openremote_heartbeat_interval: int = 30
+
+    # Keycloak middleware settings
+    keycloak_middleware_enabled: bool = True
 
     base_url: str = '/'
 
