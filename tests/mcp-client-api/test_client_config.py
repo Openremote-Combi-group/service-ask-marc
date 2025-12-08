@@ -1,3 +1,20 @@
+# Copyright 2025, OpenRemote Inc.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 """Tests for MCP client API configuration."""
 
 import pytest
@@ -73,7 +90,14 @@ class TestConfig:
         from app.config import Config
         sys.path.pop(0)
         
-        config = Config()
+        # Create config with explicit required values, no API keys
+        # Use _env_file=None to prevent loading from .env file
+        config = Config(
+            openremote_url='http://localhost:8080',
+            openremote_client_id='test-client',
+            openremote_client_secret='test-secret',
+            _env_file=None  # Disable .env file loading
+        )
         
         # Check that the attributes exist and are None or empty string
         assert hasattr(config, 'openai_api_key')

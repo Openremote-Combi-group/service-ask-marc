@@ -1,3 +1,20 @@
+# Copyright 2025, OpenRemote Inc.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 from pydantic import HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -13,11 +30,16 @@ class Config(BaseSettings):
     app_debug: bool = False
 
     openremote_url: HttpUrl
+    openremote_keycloak_url: str = "http://localhost:8081/auth"
+    openremote_realm: str = "master"
     openremote_client_id: str
     openremote_client_secret: str
     openremote_verify_ssl: bool = True
     openremote_service_id: str = 'MCP-Server'
     openremote_heartbeat_interval: int = 30
+
+    # Keycloak middleware settings
+    keycloak_middleware_enabled: bool = True
 
     base_url: str = '/'
 

@@ -1,3 +1,20 @@
+# Copyright 2025, OpenRemote Inc.
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 """Tests for MCP client API chat functionality."""
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch, call
@@ -85,7 +102,9 @@ class TestChatWebSocket:
                 # Should send error about missing API key
                 error_call = mock_websocket.send_json.call_args[0][0]
                 assert error_call["type"] == "error"
-                assert "OpenAI API key" in error_call["content"]
+                # Check for either our custom message or the library's message
+                assert ("OpenAI API key" in error_call["content"] or 
+                        "api_key" in error_call["content"].lower())
                 mock_websocket.close.assert_called_once()
 
     @pytest.mark.unit

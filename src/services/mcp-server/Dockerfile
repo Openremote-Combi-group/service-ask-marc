@@ -7,6 +7,9 @@ WORKDIR /app
 COPY ./src/shared/pyproject.toml /app/shared/pyproject.toml
 COPY ./src/services/mcp-server/pyproject.toml /app/mcp-server/pyproject.toml
 
+# Fix for the non existant app and middlewares folders, not included for caching purposes.
+RUN mkdir -p /app/mcp-server/app /app/mcp-server/middlewares
+
 # Install dependencies without full project sources
 RUN uv init
 
