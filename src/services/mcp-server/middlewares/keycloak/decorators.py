@@ -30,11 +30,11 @@ from typing import Any, cast
 
 from fastapi import HTTPException
 
-from service_ml_forecast.middlewares.keycloak.constants import (
+from .constants import (
     ERROR_INSUFFICIENT_PERMISSIONS,
     ERROR_REALM_REQUIRED,
 )
-from service_ml_forecast.middlewares.keycloak.models import UserContext
+from .models import UserContext
 
 logger = logging.getLogger(__name__)
 

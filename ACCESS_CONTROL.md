@@ -156,11 +156,6 @@ pytest tests/mcp-server/test_access_control.py
 
 ## Implementation Details
 
-Based on the `service-ml-forecast` implementation, adapted for FastMCP:
-
-- **ml-forecast**: Uses FastAPI with dependency injection
-- **ask-marc**: Uses FastMCP with context variables
-
 Key files:
 - `middlewares/keycloak/middleware.py` - JWT validation
 - `middlewares/keycloak/models.py` - UserContext
